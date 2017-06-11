@@ -4,7 +4,7 @@
 * Author: Amal Medhi
 * Date:   2016-03-09 15:27:50
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-06-11 17:23:02
+* Last Modified time: 2017-06-11 20:47:03
 *----------------------------------------------------------------------------*/
 #include <iomanip>
 #include <fstream>
@@ -20,43 +20,6 @@ Diag::Diag(const input::Parameters& inputs)
 {
   num_kpoints_ = blochbasis_.num_kpoints();
   kblock_dim_ = blochbasis_.subspace_dimension();
-  mf_model_.init(graph_.lattice());
-  std::string name; 
-  double defval;
-  using namespace model;
-  model::CouplingConstant cc;
-
-  if (graph_.lattice().id()==lattice::lattice_id::KAGOME) {
-    mf_model_.add_parameter(name="t", defval=1.0, inputs);
-    mf_model_.add_parameter(name="t2", defval=1.0, inputs);
-    mf_model_.add_parameter(name="lambda", defval=1.0, inputs);
-    mf_model_.add_parameter(name="lambda2", defval=1.0, inputs);
-    // upspin hop
-    cc = CouplingConstant({0,"-t+i*lambda"},{1,"-t-i*lambda"},
-      {2,"-t2+i*lambda2"},{3,"-t2-i*lambda2"});
-    mf_model_.add_bondterm(name="hopping", cc, op::upspin_hop());
-    // dnspin hop
-    cc = CouplingConstant({0,"-t-i*lambda"},{1,"-t+i*lambda"},
-      {2,"-t2-i*lambda2"},{3,"-t2+i*lambda2"});
-    mf_model_.add_bondterm(name="hopping", cc, op::dnspin_hop());
-    mf_model_.finalize(graph_);
-  }
-  else if (graph_.lattice().id()==lattice::lattice_id::PYROCHLORE) {
-    mf_model_.add_parameter(name="t", defval=1.0, inputs);
-    mf_model_.add_parameter(name="t2", defval=1.0, inputs);
-    mf_model_.add_parameter(name="lambda", defval=1.0, inputs);
-    mf_model_.add_parameter(name="lambda2", defval=1.0, inputs);
-    mf_model_.add_parameter(name="th", defval=1.0, inputs);
-    // upspin hop
-    cc = CouplingConstant({0,"-t+i*lambda"},{1,"-t-i*lambda"},
-      {2,"-t2+i*lambda2"},{3,"-t2-i*lambda2"},{4,"-th"});
-    mf_model_.add_bondterm(name="hopping", cc, op::upspin_hop());
-    // dnspin hop
-    cc = CouplingConstant({0,"-t-i*lambda"},{1,"-t+i*lambda"},
-      {2,"-t2-i*lambda2"},{3,"-t2+i*lambda2"},{4,"-th"});
-    mf_model_.add_bondterm(name="hopping", cc, op::dnspin_hop());
-    mf_model_.finalize(graph_);
-  }
 
   std::cout << "b1 = " << blochbasis_.vector_b1().transpose() << "\n";
   std::cout << "b2 = " << blochbasis_.vector_b2().transpose() << "\n";
@@ -64,6 +27,7 @@ Diag::Diag(const input::Parameters& inputs)
   Vector3d K_point = 0.5*(blochbasis_.vector_b1()-blochbasis_.vector_b2());
   Vector3d M_point = 0.5*blochbasis_.vector_b1();
   Vector3d G_point = Vector3d(0,0,0);
+  
   int N = 100;
   Vector3d step = (K_point-G_point)/N;
   std::cout << "K = " << step.transpose() << "\n";

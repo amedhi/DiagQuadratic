@@ -3,8 +3,8 @@
 * All rights reserved.
 * Author: Amal Medhi
 * Date:   2016-03-09 15:27:46
-* Last Modified by:   amedhi
-* Last Modified time: 2017-06-11 16:53:22
+* Last Modified by:   Amal Medhi, amedhi@macbook
+* Last Modified time: 2017-06-11 20:50:59
 *----------------------------------------------------------------------------*/
 #ifndef MODEL_H
 #define MODEL_H
@@ -22,7 +22,7 @@
 namespace model {
 
 enum class model_id {
-  UNDEFINED, HUBBARD, TJ, DISORDERED_TJ, TI_HUBBARD
+  UNDEFINED, HUBBARD, TJ, DISORDERED_TJ, TBI_HUBBARD
 };
 
 class Hamiltonian 

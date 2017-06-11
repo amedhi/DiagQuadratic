@@ -3,8 +3,8 @@
 * All rights reserved.
 * Author: Amal Medhi
 * Date:   2016-03-11 13:02:35
-* Last Modified by:   amedhi
-* Last Modified time: 2017-06-11 17:04:16
+* Last Modified by:   Amal Medhi, amedhi@macbook
+* Last Modified time: 2017-06-11 20:51:19
 *----------------------------------------------------------------------------*/
 #include <cmath>
 #include "model.h"
@@ -53,9 +53,8 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
     add_bondterm(name="exchange", cc="J", op::sisj_plus());
   }
 
-  if (model_name == "TI_HUBBARD") {
-    mid = model_id::TI_HUBBARD;
-
+  if (model_name == "TBI_HUBBARD") {
+    mid = model_id::TBI_HUBBARD;
     switch (lattice.id()) {
       case lattice::lattice_id::KAGOME:
         add_parameter(name="t", defval=1.0, inputs);
