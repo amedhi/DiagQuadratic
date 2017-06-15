@@ -4,7 +4,7 @@
 * Author: Amal Medhi
 * Date:   2016-03-09 15:27:50
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-06-11 20:47:03
+* Last Modified time: 2017-06-16 00:54:17
 *----------------------------------------------------------------------------*/
 #include <iomanip>
 #include <fstream>
@@ -20,6 +20,8 @@ Diag::Diag(const input::Parameters& inputs)
 {
   num_kpoints_ = blochbasis_.num_kpoints();
   kblock_dim_ = blochbasis_.subspace_dimension();
+  blochbasis_.gen_mesh_neighbors(graph_.lattice());
+  chern_number();
 
   std::cout << "b1 = " << blochbasis_.vector_b1().transpose() << "\n";
   std::cout << "b2 = " << blochbasis_.vector_b2().transpose() << "\n";
@@ -68,6 +70,58 @@ int Diag::run(const input::Parameters& inputs)
   return 0;
 }
 
+int Diag::chern_number(void) 
+{
+  using xy_pair = std::pair<std::complex<double>,std::complex<double> >;
+  using nn_pair = std::pair<int,int>;
+  std::vector<xy_pair> BerryConnection(num_kpoints_);
+  std::vector<nn_pair> kmesh_nn(num_kpoints_);
+
+  ComplexVector psi_k1(kblock_dim_);
+  ComplexVector psi_k2(kblock_dim_);
+  std::complex<double> U_01, U_12, U_23, U_30;
+  int band_idx = 0;
+  for (unsigned k=0; k<num_kpoints_; ++k) {
+    Vector3d kv1 = blochbasis_.kvector(k);
+    mf_model_.construct_kspace_block(kv1);
+    es_k_up.compute(mf_model_.quadratic_spinup_block());
+    psi_k1 = es_k_up.eigenvectors().col(band_idx);
+
+    int k_nn = blochbasis_.mesh_nn_xp(k);
+    Vector3d kv2 = blochbasis_.kvector(k_nn);
+    mf_model_.construct_kspace_block(kv2);
+    es_k_up.compute(mf_model_.quadratic_spinup_block());
+    psi_k2 = es_k_up.eigenvectors().col(band_idx);
+    auto x = psi_k1.dot(psi_k2);
+    BerryConnection[k].first  = x/std::abs(x);
+
+    k_nn = blochbasis_.mesh_nn_yp(k);
+    kv2 = blochbasis_.kvector(k_nn);
+    mf_model_.construct_kspace_block(kv2);
+    es_k_up.compute(mf_model_.quadratic_spinup_block());
+    psi_k2 = es_k_up.eigenvectors().col(band_idx);
+    x = psi_k1.dot(psi_k2);
+    BerryConnection[k].second = x/std::abs(x); // along dir-2
+  }
+
+  std::complex<double> csum(0.0);
+  for (unsigned k=0; k<num_kpoints_; ++k) {
+    U_01 = BerryConnection[k].first;
+    U_30 = std::conj(BerryConnection[k].second);
+    int k_nn = blochbasis_.mesh_nn_xp(k);
+    U_12 = BerryConnection[k_nn].second;
+    k_nn = blochbasis_.mesh_nn_yp(k);
+    U_23 = std::conj(BerryConnection[k_nn].first);
+    csum += std::log(U_01 * U_12 * U_23 * U_30);
+  }
+  csum /= two_pi();
+
+  std::cout << "csum = " << csum << "\n";
+  std::cout << "Chern Number = " << std::nearbyint(std::imag(csum)) << "\n";
+  getchar();
+
+  return 0;
+}
 
 void Diag::print_copyright(std::ostream& os)
 {

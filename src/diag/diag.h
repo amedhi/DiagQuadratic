@@ -9,6 +9,7 @@
 #include <iostream>
 #include <Eigen/Eigenvalues>
 #include "../scheduler/worker.h"
+#include "../lattice/constants.h"
 #include "../lattice/lattice.h"
 #include "../lattice/graph.h"
 #include "../model/model.h"
@@ -38,6 +39,8 @@ private:
   mutable Eigen::SelfAdjointEigenSolver<ComplexMatrix> es_k_up;
 
   std::vector<Vector3d> symm_line_;
+
+  int chern_number(void);
 };
 
 

@@ -2,7 +2,7 @@
 * Author: Amal Medhi
 * Date:   2017-02-01 21:13:27
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-03-22 22:41:24
+* Last Modified time: 2017-06-16 00:17:18
 * Copyright (C) Amal Medhi, amedhi@iisertvm.ac.in
 *----------------------------------------------------------------------------*/
 #include "blochbasis.h"
@@ -129,6 +129,79 @@ void BlochBasis::make_kpoints(const lattice::Lattice& lattice)
     //translation_vectors.push_back(n);
     n = lattice.get_next_bravindex(n);
   }
+}
+
+/*
+kpoint BlochBasis::mesh_nb_dir1(const unsigned& k) const
+{
+  return operator[](k) + b1/L1_;
+}
+
+kpoint BlochBasis::mesh_nb_dir2(const unsigned& k) const
+{
+  return operator[](k) + b2/L2_;
+}
+
+kpoint BlochBasis::mesh_nb_dir3(const unsigned& k) const
+{
+  return operator[](k) + b3/L3_;
+}
+*/
+
+// In the k-mesh, the NN point along dir-1
+void BlochBasis::gen_mesh_neighbors(const lattice::Lattice& lattice)
+{
+  int L1 = lattice.size1();
+  int L2 = lattice.size2();
+  int L3 = lattice.size3();
+  std::vector<std::vector<std::vector<int> > > k_points;
+  k_points.resize(L1);
+  for (int i=0; i<L1; ++i) k_points[i].resize(L2);
+  for (int i=0; i<L1; ++i) {
+    for (int j=0; j<L2; ++j) {
+      k_points[i][j].resize(L3);
+    }
+  }
+  Vector3i n = {0,0,0};
+  for (unsigned k=0; k<num_kpoint_; k++) {
+    k_points[n(0)][n(1)][n(2)] = k;
+    n = lattice.get_next_bravindex(n);
+  }
+
+  nn_list_.resize(num_kpoint_);
+  for (int k=0; k<num_kpoint_; k++) nn_list_[k].resize(6);
+
+  int nn;
+  for (int m=0; m<L3; ++m) {
+    for (int j=0; j<L2; ++j) {
+      for (int i=0; i<L1; ++i) {
+        int k = k_points[i][j][m];
+        // right & left nn
+        nn = (i+1 < L1) ? i+1 : 0;
+        //std::cout << k << " " << nn <<" "<<m << "------HERE---------\n";
+        nn_list_[k][0] = k_points[nn][j][m];
+        nn = (i-1 >= 0) ? i-1 : L1-1;
+        nn_list_[k][1] = k_points[nn][j][m];
+        // top & bottom nn
+        nn = (j+1 < L2) ? j+1 : 0;
+        nn_list_[k][2] = k_points[i][nn][m];
+        nn = (j-1 >= 0) ? j-1 : L2-1;
+        nn_list_[k][3] = k_points[i][nn][m];
+        // front & back 
+        nn = (m+1 < L3) ? m+1 : 0;
+        nn_list_[k][4] = k_points[i][j][nn];
+        nn = (m-1 >= 0) ? m-1 : L3-1;
+        nn_list_[k][5] = k_points[i][j][nn];
+      }
+    }
+  }
+  // check
+  /*for (int k=0; k<num_kpoint_; k++) {
+    std::cout<<"nnx, -nnx = "<< nn_list_[k][0]<<", "<<nn_list_[k][1] << "\n";
+    std::cout<<"nny, -nny = "<< nn_list_[k][2]<<", "<<nn_list_[k][3] << "\n";
+    std::cout<<"nnz, -nnz = "<< nn_list_[k][4]<<", "<<nn_list_[k][5] << "\n";
+    getchar();
+  }*/
 }
 
 void BlochBasis::make_subspace_basis(const lattice::LatticeGraph& graph)

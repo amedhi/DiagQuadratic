@@ -13,8 +13,8 @@ print_level = -2 #-2
 # Lattice:
 #---------------------------------------------
 lattice = "PYROCHLORE" 
-lsize1 = 100
-lsize2 = 100
+lsize1 = 10
+lsize2 = 10
 lsize3 = 1
 bc1 = "periodic"
 bc2 = "periodic"
