@@ -4,7 +4,7 @@
 * Author: Amal Medhi
 * Date:   2016-03-09 15:27:50
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-06-17 12:13:53
+* Last Modified time: 2017-06-17 13:17:42
 *----------------------------------------------------------------------------*/
 #include <iomanip>
 #include <fstream>
@@ -22,7 +22,7 @@ Diag::Diag(const input::Parameters& inputs)
   kblock_dim_ = blochbasis_.subspace_dimension();
 
   blochbasis_.gen_mesh_neighbors(graph_.lattice());
-  chern_number();
+  compute_chern_number();
 
 
   //std::cout << "b1 = " << blochbasis_.vector_b1().transpose() << "\n";
@@ -73,42 +73,66 @@ int Diag::run(const input::Parameters& inputs)
   return 0;
 }
 
-int Diag::chern_number(void) 
+int Diag::compute_chern_number(void) 
 {
-  using xy_pair = std::pair<std::complex<double>,std::complex<double> >;
-  using nn_pair = std::pair<int,int>;
-  std::vector<xy_pair> BerryConnection(num_kpoints_);
-  std::vector<nn_pair> kmesh_nn(num_kpoints_);
+  //using xy_pair = std::pair<std::complex<double>,std::complex<double> >;
+  //std::vector<xy_pair> BerryConnection(num_kpoints_);
+  //ComplexVector psi_k1(kblock_dim_);
+  //ComplexVector psi_k2(kblock_dim_);
+  //int band_idx = 0;
 
-  ComplexVector psi_k1(kblock_dim_);
-  ComplexVector psi_k2(kblock_dim_);
-  std::complex<double> U_01, U_12, U_23, U_30;
-  int band_idx = 0;
+  std::vector<ComplexVector> BerryConnection_dir1(num_kpoints_);
+  std::vector<ComplexVector> BerryConnection_dir2(num_kpoints_);
+  for (int k=0; k<num_kpoints_; ++k) {
+    BerryConnection_dir1[k].resize(kblock_dim_);
+    BerryConnection_dir2[k].resize(kblock_dim_);
+  }
+  ComplexMatrix psi_k(kblock_dim_,kblock_dim_);
   for (unsigned k=0; k<num_kpoints_; ++k) {
     Vector3d kv1 = blochbasis_.kvector(k);
     mf_model_.construct_kspace_block(kv1);
     es_k_up.compute(mf_model_.quadratic_spinup_block());
-    psi_k1 = es_k_up.eigenvectors().col(band_idx);
+    //psi_k1 = es_k_up.eigenvectors().col(band_idx);
+    psi_k = es_k_up.eigenvectors();
 
     int k_nn = blochbasis_.mesh_nn_xp(k);
     Vector3d kv2 = blochbasis_.kvector(k_nn);
     mf_model_.construct_kspace_block(kv2);
     es_k_up.compute(mf_model_.quadratic_spinup_block());
+    /*
     psi_k2 = es_k_up.eigenvectors().col(band_idx);
     auto x = psi_k1.dot(psi_k2);
     BerryConnection[k].first  = x/std::abs(x);
+    */
+    // Berry Connection at 'k' along dir1 for all bands
+    for (int n=0; n<kblock_dim_; ++n) {
+      auto x = psi_k.col(n).dot(es_k_up.eigenvectors().col(n));
+      BerryConnection_dir1[k][n] = x/std::abs(x);
+    }
+
 
     k_nn = blochbasis_.mesh_nn_yp(k);
     kv2 = blochbasis_.kvector(k_nn);
     mf_model_.construct_kspace_block(kv2);
     es_k_up.compute(mf_model_.quadratic_spinup_block());
+    /*
     psi_k2 = es_k_up.eigenvectors().col(band_idx);
     x = psi_k1.dot(psi_k2);
     BerryConnection[k].second = x/std::abs(x); // along dir-2
+    */
+    // Berry Connection at 'k' along dir2 for all bands
+    for (int n=0; n<kblock_dim_; ++n) {
+      auto x = psi_k.col(n).dot(es_k_up.eigenvectors().col(n));
+      BerryConnection_dir2[k][n] = x/std::abs(x);
+    }
   }
 
-  std::complex<double> csum(0.0);
+  std::complex<double> U_01, U_12, U_23, U_30;
+  //std::complex<double> csum(0.0);
+  ComplexVector BerrySum(kblock_dim_);
+  BerrySum.setZero();
   for (unsigned k=0; k<num_kpoints_; ++k) {
+    /*
     U_01 = BerryConnection[k].first;
     U_30 = std::conj(BerryConnection[k].second);
     int k_nn = blochbasis_.mesh_nn_xp(k);
@@ -116,14 +140,26 @@ int Diag::chern_number(void)
     k_nn = blochbasis_.mesh_nn_yp(k);
     U_23 = std::conj(BerryConnection[k_nn].first);
     csum += std::log(U_01 * U_12 * U_23 * U_30);
+    */
+    int k_nn1 = blochbasis_.mesh_nn_xp(k);
+    int k_nn2 = blochbasis_.mesh_nn_yp(k);
+    for (int n=0; n<kblock_dim_; ++n) {
+      U_01 = BerryConnection_dir1[k][n];
+      U_30 = std::conj(BerryConnection_dir2[k][n]);
+      U_12 = BerryConnection_dir2[k_nn1][n];
+      U_23 = std::conj(BerryConnection_dir1[k_nn2][n]);
+      BerrySum[n] += std::log(U_01 * U_12 * U_23 * U_30);
+    }
   }
-  csum /= two_pi();
+  //std::cout << "csum = " << csum/two_pi() <<"\n";
+  //int chern_number = std::nearbyint(std::imag(csum/two_pi()));
+  std::vector<int> ChernNumber(kblock_dim_);
+  for (int n=0; n<kblock_dim_; ++n) {
+    ChernNumber[n] = std::nearbyint(std::imag(BerrySum[n]/two_pi()));
+    std::cout << "Chern number of band-"<<n<<" = "<<ChernNumber[n]<<"\n";
+  }
 
-  std::cout << "csum = " << csum << "\n";
-  std::cout << "Chern Number = " << std::nearbyint(std::imag(csum)) << "\n";
-  getchar();
-
-  return std::nearbyint(std::imag(csum));
+  return 0;
 }
 
 void Diag::print_copyright(std::ostream& os)

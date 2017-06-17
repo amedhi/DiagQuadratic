@@ -40,7 +40,7 @@ private:
 
   std::vector<Vector3d> symm_line_;
 
-  int chern_number(void);
+  int compute_chern_number(void);
 };
 
 
