@@ -3,8 +3,8 @@
 * All rights reserved.
 * Author: Amal Medhi
 * Date:   2016-01-25 18:05:03
-* Last Modified by:   amedhi
-* Last Modified time: 2017-05-31 07:15:59
+* Last Modified by:   Amal Medhi, amedhi@macbook
+* Last Modified time: 2017-06-17 11:41:52
 *----------------------------------------------------------------------------*/
 #ifndef LATTICE_H
 #define LATTICE_H
@@ -27,7 +27,8 @@ const unsigned MAX_BOND_TYPES = 40;
 
 /*---------------lattice types-----------------*/
 enum class lattice_id {
-  UNDEFINED, SQUARE, CHAIN, HONEYCOMB, SIMPLECUBIC, KAGOME, PYROCHLORE
+  UNDEFINED, SQUARE, SQUARE_2BAND, CHAIN, HONEYCOMB, SIMPLECUBIC, 
+  KAGOME, PYROCHLORE
 };
 
 /*---------------Lattice site class-----------------*/

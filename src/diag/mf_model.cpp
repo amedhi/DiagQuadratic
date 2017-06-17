@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------
 * Author: Amal Medhi
 * Date:   2017-01-30 18:54:09
-* Last Modified by:   amedhi
-* Last Modified time: 2017-06-11 17:19:30
+* Last Modified by:   Amal Medhi, amedhi@macbook
+* Last Modified time: 2017-06-17 12:12:07
 * Copyright (C) Amal Medhi, amedhi@iisertvm.ac.in
 *----------------------------------------------------------------------------*/
 #include "./mf_model.h"
@@ -79,8 +79,10 @@ void MF_Model::build_unitcell_terms(const lattice::LatticeGraph& graph)
       num_siteterms++;
   }
   for (auto bterm=bondterms_begin(); bterm!=bondterms_end(); ++bterm) {
-    if (bterm->qn_operator().is_quadratic() || bterm->qn_operator().is_pairing())
+    if (bterm->qn_operator().is_quadratic() || bterm->qn_operator().is_pairing()) {
+      //std::cout << bterm->qn_operator().name() << "\n"; getchar();
       num_bondterms++;
+    }
   }
   usite_terms_.resize(num_siteterms);
   ubond_terms_.resize(num_bondterms);
@@ -187,6 +189,14 @@ void UnitcellTerm::build_bondterm(const model::HamiltonianTerm& hamterm,
     M.resize(dim_);
     for (unsigned i=0; i<dim_; ++i) M[i].resize(dim_);
   }
+  // initialize expression matrices
+  for (int id=0; id<num_out_bonds_; ++id) {
+    for (int i=0; i<dim_; ++i) {
+      for (int j=0; j<dim_; ++j) {
+        expr_matrices_[id][i][j] = "0";
+      }
+    }
+  }
 
   // operator
   op_ = hamterm.qn_operator();
@@ -213,7 +223,18 @@ void UnitcellTerm::build_bondterm(const model::HamiltonianTerm& hamterm,
       //std::cout<<bond_vectors_[id].transpose()<<"\n"; getchar();
     }
   }
-  //getchar();
+  /*std::cout <<"------"<<op_.name()<<"-------\n"; getchar();
+  for (int id=0; id<num_out_bonds_; ++id) {
+    std::cout << "delta = " << id << "\n";
+    for (int i=0; i<dim_; ++i) {
+      for (int j=0; j<dim_; ++j) {
+        std::cout<<i<<", "<<j<<"= "<<expr_matrices_[id][i][j]<<"\n";
+      }
+    }
+    std::cout<<"\n";
+  }
+  getchar();
+  */
 }
 
 void UnitcellTerm::build_siteterm(const model::HamiltonianTerm& hamterm,
@@ -228,6 +249,13 @@ void UnitcellTerm::build_siteterm(const model::HamiltonianTerm& hamterm,
   expr_matrices_.resize(1);
   expr_matrices_[0].resize(dim_);
   for (unsigned i=0; i<dim_; ++i) expr_matrices_[0][i].resize(dim_);
+  // initialize expression matrix
+  for (int i=0; i<dim_; ++i) {
+    for (int j=0; j<dim_; ++j) {
+      expr_matrices_[0][i][j] = "0";
+    }
+  }
+
   // operator
   op_ = hamterm.qn_operator();
   // build the matrix 
@@ -238,8 +266,9 @@ void UnitcellTerm::build_siteterm(const model::HamiltonianTerm& hamterm,
     std::string cc_expr(hamterm.coupling_expr(stype));
     boost::trim(cc_expr);
     if (cc_expr.size()>0) {
-      if (cc_expr[0]!='-') expr_matrices_[0][i][i] += "+";
-      expr_matrices_[0][i][i] += cc_expr;
+      //if (cc_expr[0]!='-') expr_matrices_[0][i][i] += "+";
+      //expr_matrices_[0][i][i] += cc_expr;
+      expr_matrices_[0][i][i] += "+("+cc_expr+")";
     }
   }
   bond_vectors_[0] = Vector3d(0.0,0.0,0.0);

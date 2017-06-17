@@ -4,7 +4,7 @@
 * Author: Amal Medhi
 * Date:   2016-03-11 13:02:35
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-06-14 11:01:11
+* Last Modified time: 2017-06-17 12:02:29
 *----------------------------------------------------------------------------*/
 #include <cmath>
 #include "model.h"
@@ -53,9 +53,47 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
     add_bondterm(name="exchange", cc="J", op::sisj_plus());
   }
 
-  if (model_name == "TBI_HUBBARD") {
+  else if (model_name == "TBI_HUBBARD") {
     mid = model_id::TBI_HUBBARD;
     switch (lattice.id()) {
+      case lattice::lattice_id::SQUARE_2BAND:
+        add_parameter(name="e0", defval=1.0, inputs);
+        add_parameter(name="t", defval=1.0, inputs);
+        add_parameter(name="tsp", defval=1.0, inputs);
+        // site operators
+        cc = CouplingConstant({0,"-(e0-4*t)"}, {1,"(e0-4*t)"});
+        add_siteterm(name="hopping", cc, op::ni_up());
+        add_siteterm(name="hopping", cc, op::ni_dn());
+
+        // upspin hop
+        cc = CouplingConstant({0,"-t"}, {1,"-i*tsp"},
+          {2,"-i*tsp"}, {3,"t"}, {4,"-tsp"},{5,"tsp"});
+        add_bondterm(name="hopping", cc, op::upspin_hop());
+        // dnspin hop
+        cc = CouplingConstant({0,"-t"}, {1,"i*tsp"},
+          {2,"i*tsp"}, {3,"t"}, {4,"-tsp"},{5,"tsp"});
+        add_bondterm(name="hopping", cc, op::dnspin_hop());
+        // Hubbard interaction
+        add_parameter(name="U", defval=0.0, inputs);
+        add_siteterm(name="hubbard", cc="U", op::hubbard_int());
+        break;
+
+      case lattice::lattice_id::HONEYCOMB:
+        add_parameter(name="t", defval=1.0, inputs);
+        add_parameter(name="lambda", defval=1.0, inputs);
+        // upspin hop
+        cc = CouplingConstant({0,"-t"}, {1,"i*lambda"},
+          {2,"-i*lambda"}, {3,"-i*lambda"}, {4,"i*lambda"});
+        add_bondterm(name="hopping", cc, op::upspin_hop());
+        // dnspin hop
+        cc = CouplingConstant({0,"-t"}, {1,"-i*lambda"},
+          {2,"i*lambda"}, {3,"i*lambda"}, {4,"-i*lambda"});
+        add_bondterm(name="hopping", cc, op::dnspin_hop());
+        // Hubbard interaction
+        add_parameter(name="U", defval=0.0, inputs);
+        add_siteterm(name="hubbard", cc="U", op::hubbard_int());
+        break;
+
       case lattice::lattice_id::KAGOME:
         add_parameter(name="t", defval=1.0, inputs);
         add_parameter(name="t2", defval=1.0, inputs);
@@ -73,6 +111,7 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
         add_parameter(name="U", defval=0.0, inputs);
         add_siteterm(name="hubbard", cc="U", op::hubbard_int());
         break;
+
       case lattice::lattice_id::PYROCHLORE:
         add_parameter(name="t", defval=1.0, inputs);
         add_parameter(name="t2", defval=1.0, inputs);
@@ -91,17 +130,10 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
         add_parameter(name="U", defval=0.0, inputs);
         add_siteterm(name="hubbard", cc="U", op::hubbard_int());
         break;
+
       default:
         throw std::range_error("*error: modellibrary: model not defined for the lattice"); 
     }
-
-
-    // model parameters
-    add_parameter(name="t", defval=1.0, inputs);
-    add_parameter(name="U", defval=0.0, inputs);
-    // bond operator terms
-    add_bondterm(name="hopping", cc="-t", op::spin_hop());
-    add_siteterm(name="hubbard", cc="U", op::hubbard_int());
   }
 
 
