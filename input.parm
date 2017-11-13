@@ -13,8 +13,8 @@ print_level = -2 #-2
 # Lattice:
 #---------------------------------------------
 lattice = "PYROCHLORE" 
-lsize1 = 10
-lsize2 = 10
+lsize1 = 200
+lsize2 = 200
 lsize3 = 1
 bc1 = "periodic"
 bc2 = "periodic"
@@ -27,9 +27,9 @@ bc3 = "open"
 model = "TBI_HUBBARD"
 t = 1.0
 t2 = -0.3
-lambda = 0 #0.3
-lambda2 = 0 # 0.2
-th = -1.3
+lambda = 0.3
+lambda2 = 0.2
+th = -1.45
 
 U = 0.0
 
@@ -41,5 +41,16 @@ hole_doping = 0.0
 #---------------------------------------------
 # List of observable to calculate:
 #---------------------------------------------
-Energy = "NO"
+chern_number = "YES"
+ebands_full = "NO"
+ebands_symm = "NO"
+band_gap = "YES"
+
+
+
+
+
+
+
+
 

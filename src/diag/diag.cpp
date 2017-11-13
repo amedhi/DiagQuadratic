@@ -4,7 +4,7 @@
 * Author: Amal Medhi
 * Date:   2016-03-09 15:27:50
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-06-17 13:17:42
+* Last Modified time: 2017-06-22 13:00:28
 *----------------------------------------------------------------------------*/
 #include <iomanip>
 #include <fstream>
@@ -18,55 +18,87 @@ Diag::Diag(const input::Parameters& inputs)
   , mf_model_(model_,graph_)
   , blochbasis_(graph_)
 {
+  // outputs
+  int info;
+  need_chern_number_ = inputs.set_value("chern_number",false,info);
+  need_ebands_full_ = inputs.set_value("ebands_full",false,info);
+  need_ebands_symm_ = inputs.set_value("ebands_symm",false,info);
+  need_band_gap_ = inputs.set_value("band_gap",false,info);
+
   num_kpoints_ = blochbasis_.num_kpoints();
   kblock_dim_ = blochbasis_.subspace_dimension();
+  if (need_chern_number_) {
+    blochbasis_.gen_mesh_neighbors(graph_.lattice());
+  }
 
-  blochbasis_.gen_mesh_neighbors(graph_.lattice());
-  compute_chern_number();
-
-
-  //std::cout << "b1 = " << blochbasis_.vector_b1().transpose() << "\n";
-  //std::cout << "b2 = " << blochbasis_.vector_b2().transpose() << "\n";
-  //std::cout << "b3 = " << blochbasis_.vector_b3().transpose() << "\n";
-  Vector3d K_point = 0.5*(blochbasis_.vector_b1()-blochbasis_.vector_b2());
-  Vector3d M_point = 0.5*blochbasis_.vector_b1();
-  Vector3d G_point = Vector3d(0,0,0);
+  if (need_ebands_full_) {
+    //std::cout << "b1 = " << blochbasis_.vector_b1().transpose() << "\n";
+    //std::cout << "b2 = " << blochbasis_.vector_b2().transpose() << "\n";
+    //std::cout << "b3 = " << blochbasis_.vector_b3().transpose() << "\n";
+    Vector3d K_point = 0.5*(blochbasis_.vector_b1()-blochbasis_.vector_b2());
+    Vector3d M_point = 0.5*blochbasis_.vector_b1();
+    Vector3d G_point = Vector3d(0,0,0);
   
-  int N = 100;
-  Vector3d step = (K_point-G_point)/N;
-  //std::cout << "K = " << step.transpose() << "\n";
-  for (int i=0; i<N; ++i) symm_line_.push_back(G_point+i*step);
-  step = (M_point-K_point)/N;
-  for (int i=0; i<N; ++i) symm_line_.push_back(K_point+i*step);
-  step = (G_point-M_point)/N;
-  for (int i=0; i<N; ++i) symm_line_.push_back(M_point+i*step);
-  symm_line_.push_back(G_point);
+    int N = 100;
+    Vector3d step = (K_point-G_point)/N;
+    //std::cout << "K = " << step.transpose() << "\n";
+    for (int i=0; i<N; ++i) symm_line_.push_back(G_point+i*step);
+    step = (M_point-K_point)/N;
+    for (int i=0; i<N; ++i) symm_line_.push_back(K_point+i*step);
+    step = (G_point-M_point)/N;
+    for (int i=0; i<N; ++i) symm_line_.push_back(M_point+i*step);
+    symm_line_.push_back(G_point);
+  }
 }
 
 int Diag::run(const input::Parameters& inputs) 
 {
+  // Chern number
+  if (need_chern_number_) {
+    compute_chern_number();
+  }
+  // Band gap
+  if (need_band_gap_) {
+    compute_band_gap();
+  }
+
+  // Band structure
+  //std::cout << "****Diag::run:: returning****\n"; return 0;
   //std::ios state(NULL);
   //state.copyfmt(std::cout);
   //std::cout << std::scientific << std::uppercase << std::setprecision(6) << std::right;
-  std::ofstream of("energy.txt");
+  std::ofstream of("res_energy.txt");
   of << std::scientific << std::uppercase << std::setprecision(6) << std::right;
-  std::vector<double> ek;
-  for (unsigned k=0; k<num_kpoints_; ++k) {
-  //for (unsigned k=0; k<symm_line_.size(); ++k) {
-    //std::cout << k << " of " << symm_line_.size() << "\n";
-    Vector3d kvec = blochbasis_.kvector(k);
-    //Vector3d kvec = symm_line_[k];
-    mf_model_.construct_kspace_block(kvec);
-    //std::cout << mf_model_.quadratic_spinup_block() << "\n"; getchar();
-    es_k_up.compute(mf_model_.quadratic_spinup_block(), Eigen::EigenvaluesOnly);
-    //ek.insert(ek.end(),es_k_up.eigenvalues().data(),
-    //    es_k_up.eigenvalues().data()+kblock_dim_);
-    if (k%graph_.lattice().size1()==0) of << "\n";
-    of << std::setw(6) << k; 
-    of << std::setw(14) << kvec(0) << std::setw(14) << kvec(1); 
-    of << std::setw(14) << es_k_up.eigenvalues().transpose() << "\n";
+  if (need_ebands_full_) {
+    for (unsigned k=0; k<num_kpoints_; ++k) {
+      //std::cout << k << " of " << symm_line_.size() << "\n";
+      Vector3d kvec = blochbasis_.kvector(k);
+      mf_model_.construct_kspace_block(kvec);
+      es_k_up_.compute(mf_model_.quadratic_spinup_block(), Eigen::EigenvaluesOnly);
+      if (k%graph_.lattice().size1()==0) of << "\n";
+      of << std::setw(6) << k; 
+      of << std::setw(14) << kvec(0) << std::setw(14) << kvec(1); 
+      of << std::setw(14) << es_k_up_.eigenvalues().transpose() << "\n";
+    }
+    of << "\n\n"; 
+  } 
+
+  if (need_ebands_symm_) {
+    for (unsigned k=0; k<symm_line_.size(); ++k) {
+      //std::cout << k << " of " << symm_line_.size() << "\n";
+      Vector3d kvec = symm_line_[k];
+      mf_model_.construct_kspace_block(kvec);
+      //std::cout << mf_model_.quadratic_spinup_block() << "\n"; getchar();
+      es_k_up_.compute(mf_model_.quadratic_spinup_block(), Eigen::EigenvaluesOnly);
+      //ek.insert(ek.end(),es_k_up.eigenvalues().data(),
+      //    es_k_up.eigenvalues().data()+kblock_dim_);
+      //if (k%graph_.lattice().size1()==0) of << "\n";
+      of << std::setw(6) << k; 
+      of << std::setw(14) << kvec(0) << std::setw(14) << kvec(1); 
+      of << std::setw(14) << es_k_up_.eigenvalues().transpose() << "\n";
+    }
+    of << "\n\n"; 
   }
-  of << "\n\n"; 
   of.close();
   //std::sort(ek.begin(),ek.end());
   //std::cout.copyfmt(state);
@@ -91,22 +123,22 @@ int Diag::compute_chern_number(void)
   for (unsigned k=0; k<num_kpoints_; ++k) {
     Vector3d kv1 = blochbasis_.kvector(k);
     mf_model_.construct_kspace_block(kv1);
-    es_k_up.compute(mf_model_.quadratic_spinup_block());
-    //psi_k1 = es_k_up.eigenvectors().col(band_idx);
-    psi_k = es_k_up.eigenvectors();
+    es_k_up_.compute(mf_model_.quadratic_spinup_block());
+    //psi_k1 = es_k_up_.eigenvectors().col(band_idx);
+    psi_k = es_k_up_.eigenvectors();
 
     int k_nn = blochbasis_.mesh_nn_xp(k);
     Vector3d kv2 = blochbasis_.kvector(k_nn);
     mf_model_.construct_kspace_block(kv2);
-    es_k_up.compute(mf_model_.quadratic_spinup_block());
+    es_k_up_.compute(mf_model_.quadratic_spinup_block());
     /*
-    psi_k2 = es_k_up.eigenvectors().col(band_idx);
+    psi_k2 = es_k_up_.eigenvectors().col(band_idx);
     auto x = psi_k1.dot(psi_k2);
     BerryConnection[k].first  = x/std::abs(x);
     */
     // Berry Connection at 'k' along dir1 for all bands
     for (int n=0; n<kblock_dim_; ++n) {
-      auto x = psi_k.col(n).dot(es_k_up.eigenvectors().col(n));
+      auto x = psi_k.col(n).dot(es_k_up_.eigenvectors().col(n));
       BerryConnection_dir1[k][n] = x/std::abs(x);
     }
 
@@ -114,15 +146,15 @@ int Diag::compute_chern_number(void)
     k_nn = blochbasis_.mesh_nn_yp(k);
     kv2 = blochbasis_.kvector(k_nn);
     mf_model_.construct_kspace_block(kv2);
-    es_k_up.compute(mf_model_.quadratic_spinup_block());
+    es_k_up_.compute(mf_model_.quadratic_spinup_block());
     /*
-    psi_k2 = es_k_up.eigenvectors().col(band_idx);
+    psi_k2 = es_k_up_.eigenvectors().col(band_idx);
     x = psi_k1.dot(psi_k2);
     BerryConnection[k].second = x/std::abs(x); // along dir-2
     */
     // Berry Connection at 'k' along dir2 for all bands
     for (int n=0; n<kblock_dim_; ++n) {
-      auto x = psi_k.col(n).dot(es_k_up.eigenvectors().col(n));
+      auto x = psi_k.col(n).dot(es_k_up_.eigenvectors().col(n));
       BerryConnection_dir2[k][n] = x/std::abs(x);
     }
   }
@@ -154,11 +186,43 @@ int Diag::compute_chern_number(void)
   //std::cout << "csum = " << csum/two_pi() <<"\n";
   //int chern_number = std::nearbyint(std::imag(csum/two_pi()));
   std::vector<int> ChernNumber(kblock_dim_);
+  int net_chern_number = 0;
   for (int n=0; n<kblock_dim_; ++n) {
     ChernNumber[n] = std::nearbyint(std::imag(BerrySum[n]/two_pi()));
+    net_chern_number += ChernNumber[n];
     std::cout << "Chern number of band-"<<n<<" = "<<ChernNumber[n]<<"\n";
   }
+  std::cout << "Net Chern number = " << net_chern_number << "\n";
 
+  return 0;
+}
+
+int Diag::compute_band_gap(void) 
+{
+
+  Eigen::ArrayXd band_lo = RealVector::Constant(kblock_dim_,1.E4);
+  Eigen::ArrayXd band_hi = RealVector::Constant(kblock_dim_,-1.E4);
+  for (unsigned k=0; k<num_kpoints_; ++k) {
+    //std::cout << k << " of " << symm_line_.size() << "\n";
+    Vector3d kvec = blochbasis_.kvector(k);
+    mf_model_.construct_kspace_block(kvec);
+    es_k_up_.compute(mf_model_.quadratic_spinup_block(), Eigen::EigenvaluesOnly);
+
+    //for (int i=0; i<kblock_dim_; ++i) {
+    //  if (es_k_up_.eigenvalues()(i)<band_lo(i)) band_lo(i) = es_k_up_.eigenvalues()(i); 
+    //  if (es_k_up_.eigenvalues()(i)>band_hi(i)) band_hi(i) = es_k_up_.eigenvalues()(i); 
+    //}
+    band_lo = band_lo.min(es_k_up_.eigenvalues().array());
+    band_hi = band_hi.max(es_k_up_.eigenvalues().array());
+  }
+  //std::cout << "lo = " << band_lo.transpose() << "\n";
+  //std::cout << "hi = " << band_hi.transpose() << "\n";
+  std::ofstream fout("res_bandgap.txt");
+  fout << "Band gaps:" << "\n";
+  for (int i=0; i<kblock_dim_-1; ++i) {
+    fout<<"Eg("<<i<<","<<i+1<<") = "<<std::setw(14)<<band_lo(i+1)-band_hi(i)<<"\n";
+  }
+  fout.close();
   return 0;
 }
 
