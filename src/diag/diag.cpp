@@ -31,7 +31,7 @@ Diag::Diag(const input::Parameters& inputs)
     blochbasis_.gen_mesh_neighbors(graph_.lattice());
   }
 
-  if (need_ebands_full_) {
+  if (need_ebands_symm_) {
     //std::cout << "b1 = " << blochbasis_.vector_b1().transpose() << "\n";
     //std::cout << "b2 = " << blochbasis_.vector_b2().transpose() << "\n";
     //std::cout << "b3 = " << blochbasis_.vector_b3().transpose() << "\n";
@@ -199,6 +199,12 @@ int Diag::compute_chern_number(void)
 
 int Diag::compute_band_gap(void) 
 {
+  std::ofstream fout("res_bandgap.txt");
+  if (kblock_dim_<2) {
+    fout << "System does not have multiple bands\n";
+    fout.close();
+    return 0;
+  }
 
   Eigen::ArrayXd band_lo = RealVector::Constant(kblock_dim_,1.E4);
   Eigen::ArrayXd band_hi = RealVector::Constant(kblock_dim_,-1.E4);
@@ -207,21 +213,28 @@ int Diag::compute_band_gap(void)
     Vector3d kvec = blochbasis_.kvector(k);
     mf_model_.construct_kspace_block(kvec);
     es_k_up_.compute(mf_model_.quadratic_spinup_block(), Eigen::EigenvaluesOnly);
-
-    //for (int i=0; i<kblock_dim_; ++i) {
-    //  if (es_k_up_.eigenvalues()(i)<band_lo(i)) band_lo(i) = es_k_up_.eigenvalues()(i); 
-    //  if (es_k_up_.eigenvalues()(i)>band_hi(i)) band_hi(i) = es_k_up_.eigenvalues()(i); 
-    //}
     band_lo = band_lo.min(es_k_up_.eigenvalues().array());
     band_hi = band_hi.max(es_k_up_.eigenvalues().array());
   }
   //std::cout << "lo = " << band_lo.transpose() << "\n";
   //std::cout << "hi = " << band_hi.transpose() << "\n";
-  std::ofstream fout("res_bandgap.txt");
   fout << "Band gaps:" << "\n";
   for (int i=0; i<kblock_dim_-1; ++i) {
     fout<<"Eg("<<i<<","<<i+1<<") = "<<std::setw(14)<<band_lo(i+1)-band_hi(i)<<"\n";
   }
+  fout << "\nBand widths:" << "\n";
+  for (int i=0; i<kblock_dim_; ++i) {
+    fout<<"W("<<i<<") = "<<std::setw(14)<<band_hi(i)-band_lo(i)<<"\n";
+  }
+  fout << "\nFlatness ratio:" << "\n";
+  for (int i=1; i<kblock_dim_-1; ++i) {
+    double D1 = band_lo(i)-band_hi(i-1);
+    double D2 = band_lo(i+1)-band_hi(i);
+    double D = std::min(D1,D2);
+    double W = band_hi(i)-band_lo(i);
+    fout<<"D/W("<<i<<") = "<<std::setw(14)<<D/W<<"\n";
+  }
+
   fout.close();
   return 0;
 }
