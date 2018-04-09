@@ -38,9 +38,9 @@ public:
   //const double& coupling(const unsigned& site_type) const; 
   const model::op::quantum_op& qn_operator(void) const { return op_; }
 private:
-  using strMatrix = std::vector<std::vector<std::string> >;
   model::op::quantum_op op_;
   unsigned num_out_bonds_;
+  unsigned num_basis_sites_;
   unsigned dim_;
   std::vector<ComplexMatrix> coeff_matrices_;
   std::vector<strMatrix> expr_matrices_;
@@ -66,6 +66,7 @@ private:
   std::vector<UnitcellTerm> usite_terms_;
   std::vector<UnitcellTerm> ubond_terms_;
   // matrices in kspace representation
+  unsigned num_basis_sites_;
   unsigned dim_;
   ComplexMatrix quadratic_block_up_;
   ComplexMatrix quadratic_block_dn_;

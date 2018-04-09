@@ -53,6 +53,10 @@ Diag::Diag(const input::Parameters& inputs)
 
 int Diag::run(const input::Parameters& inputs) 
 {
+  //std::cout << " Exiting at Diag::Diag\n";
+  //std::exit(0);
+
+
   // Chern number
   if (need_chern_number_) {
     compute_chern_number();
@@ -74,6 +78,7 @@ int Diag::run(const input::Parameters& inputs)
       //std::cout << k << " of " << symm_line_.size() << "\n";
       Vector3d kvec = blochbasis_.kvector(k);
       mf_model_.construct_kspace_block(kvec);
+      //std::cout << mf_model_.quadratic_spinup_block() << "\n"; std::getchar();
       es_k_up_.compute(mf_model_.quadratic_spinup_block(), Eigen::EigenvaluesOnly);
       if (k%graph_.lattice().size1()==0) of << "\n";
       of << std::setw(6) << k; 
@@ -82,7 +87,6 @@ int Diag::run(const input::Parameters& inputs)
     }
     of << "\n\n"; 
   } 
-
   if (need_ebands_symm_) {
     for (unsigned k=0; k<symm_line_.size(); ++k) {
       //std::cout << k << " of " << symm_line_.size() << "\n";

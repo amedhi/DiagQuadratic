@@ -18,12 +18,13 @@ int Lattice::define_lattice(void)
 {
   using pos = Eigen::Vector3i;
   using vec = Eigen::Vector3d;
-  unsigned type, ngb, src, tgt;
+  unsigned type, src, tgt;
   vec a1, a2, a3, coord;
   pos src_offset, tgt_offset, cell;
 
   /*------------- 'SQUARE' lattice--------------*/
   if (lname == "SQUARE") {
+    /*
     // type
     lid = lattice_id::SQUARE;
     extent[dim3] = Extent{1, boundary_type::open, boundary_type::open};
@@ -34,6 +35,7 @@ int Lattice::define_lattice(void)
     // add bonds
     add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(1,0,0));
     add_bond(type=1, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(0,1,0));
+    */
   }
 
   else if (lname == "SQUARE_2BAND") {
@@ -43,10 +45,16 @@ int Lattice::define_lattice(void)
     // basis vectors
     set_basis_vectors(a1=vec(1,0,0), a2=vec(0,1,0), a3=vec(0,0,0));
     // add sites
-    int atom;
+    int orbitals;
+    add_basis_site(orbitals=2, coord=vec(0,0,0));
+    add_bond(type=0, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(1,0,0));
+    add_bond(type=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(0,1,0));
+
+    // bonds along +x
+    /*
+    // add sites
     add_basis_site(type=0, atom=0, coord=vec(0,0,0));
     add_basis_site(type=1, atom=0, coord=vec(0,0,0));
-    // bonds along +x
     add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(1,0,0));
     add_bond(type=1, ngb=1, src=0, src_offset=pos(0,0,0), tgt=1, tgt_offset=pos(1,0,0));
     add_bond(type=2, ngb=1, src=1, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(1,0,0));
@@ -56,10 +64,12 @@ int Lattice::define_lattice(void)
     add_bond(type=4, ngb=1, src=0, src_offset=pos(0,0,0), tgt=1, tgt_offset=pos(0,1,0));
     add_bond(type=5, ngb=1, src=1, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(0,1,0));
     add_bond(type=3, ngb=1, src=1, src_offset=pos(0,0,0), tgt=1, tgt_offset=pos(0,1,0));
+    */
   }
 
   else if (lname == "SIMPLE_CUBIC") {
     // type
+    /*
     lid = lattice_id::SIMPLECUBIC;
     // basis vectors
     set_basis_vectors(a1=vec(1,0,0), a2=vec(0,1,0), a3=vec(0,0,1));
@@ -69,10 +79,12 @@ int Lattice::define_lattice(void)
     add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(1,0,0));
     add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(0,1,0));
     add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(0,0,1));
+    */
   }
 
   /*------------- 'CHAIN' lattice--------------*/
   else if (lname == "CHAIN") {
+    /*
     lid = lattice_id::CHAIN;
     extent[dim2] = Extent{1, boundary_type::open, boundary_type::open};
     extent[dim3] = Extent{1, boundary_type::open, boundary_type::open};
@@ -80,9 +92,11 @@ int Lattice::define_lattice(void)
     add_basis_site(type=0, coord=vec(0,0,0));
     // add bonds
     add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(1,0,0));
+    */
   }
 
   else if (lname == "HONEYCOMB") {
+    /*
     // type
     lid = lattice_id::HONEYCOMB;
     extent[dim3] = Extent{1, boundary_type::open, boundary_type::open};
@@ -105,9 +119,11 @@ int Lattice::define_lattice(void)
     add_bond(type=3, ngb=2, src=1, src_offset=pos(0,0,0), tgt=1, tgt_offset=pos(1,0,0));
     add_bond(type=3, ngb=2, src=1, src_offset=pos(0,0,0), tgt=1, tgt_offset=pos(0,1,0));
     add_bond(type=4, ngb=2, src=1, src_offset=pos(0,0,0), tgt=1, tgt_offset=pos(1,1,0));
+    */
   }
 
   else if (lname == "KAGOME") {
+    /*
     // type
     lid = lattice_id::KAGOME;
     extent[dim3] = Extent{1, boundary_type::open, boundary_type::open};
@@ -150,11 +166,13 @@ int Lattice::define_lattice(void)
     add_bond(type=2,ngb=2,src=0,src_offset=pos(0,0,0),tgt=2,tgt_offset=pos(1,-1,0));
     // B-A (inter-cell) 
     add_bond(type=2,ngb=2,src=1,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(1,-1,0));
+    */
   }
 
-  else if (lname == "PYROCHLORE") {
+  else if (lname == "PYROCHLORE_V1") {
+    /*
     // type
-    lid = lattice_id::PYROCHLORE;
+    lid = lattice_id::PYROCHLORE_V1;
     // basis vectors
     double x = 1.0; 
     double y = std::sqrt(3.0); 
@@ -215,7 +233,33 @@ int Lattice::define_lattice(void)
     add_bond(type=4,ngb=1,src=3,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(-1,0,1));
     // D-C (inter-cell) 
     add_bond(type=4,ngb=1,src=3,src_offset=pos(0,0,0),tgt=2,tgt_offset=pos(0,-1,1));
+    */
   }
+
+  else if (lname == "PYROCHLORE_3D") {
+    // type
+    lid = lattice_id::PYROCHLORE_3D;
+    // basis vectors
+    set_basis_vectors(a1=vec(0,2,2), a2=vec(2,0,2), a3=vec(2,2,0));
+    // add sites
+    int orbitals;
+    // Ir site-0
+    add_basis_site(type=0, orbitals=6, coord=vec(0,0,0));
+    add_basis_site(type=1, orbitals=6, coord=0.5*basis_vector_a1());
+    add_basis_site(type=2, orbitals=6, coord=0.5*basis_vector_a2());
+    add_basis_site(type=3, orbitals=6, coord=0.5*basis_vector_a3());
+
+    // NN-1 bonds
+    //add_bond(type=0,src=0,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,0,0));
+    //add_bond(type=0,src=0,src_offset=pos(0,0,0),tgt=2,tgt_offset=pos(0,0,0));
+    //add_bond(type=0,src=0,src_offset=pos(0,0,0),tgt=3,tgt_offset=pos(0,0,0));
+    //for (int orb1=0; orb1<6; ++orb1) {
+    //  for (int orb2=0; orb2<6; ++orb2) {
+    //    add_bond(type=0,ngb=1,src=orb1,src_offset=pos(0,0,0),tgt=6+orb2,tgt_offset=pos(0,0,0));
+    //  }
+    //}
+  }
+
 
   /*------------- undefined lattice--------------*/
   else {
@@ -285,6 +329,16 @@ int Lattice::finalize_lattice(void)
   num_total_cells_ = num_layer_cells_ * extent[dim3].size;
   num_basis_sites_ = Unitcell::num_sites();
   num_total_sites_ = num_total_cells_ * num_basis_sites_;
+
+  // indexing of the 'basis orbitals'
+  basis_index_.clear();
+  basis_index_.resize(num_basis_sites_);
+  unsigned idx = 0;
+  for (unsigned i=0; i<num_basis_sites_; ++i) {
+    for (unsigned j=0; j<basis_site(i).num_orbitals(); ++j) {
+      basis_index_[i].push_back(idx++);
+    }
+  }
 
   // check
   /*std::cout << "------Sites-------\n";

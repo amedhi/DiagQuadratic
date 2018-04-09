@@ -20,6 +20,8 @@ namespace lattice {
 LatticeGraph::LatticeGraph(const input::Parameters& parms) : lattice_(parms)
 {
   construct_graph();
+  //std::cout << "-----------Exiting at LatticeGraph::LatticeGraph----------\n";
+  //std::exit(0);
 } 
 
 void LatticeGraph::construct(const input::Parameters& parms) 
@@ -55,12 +57,14 @@ void LatticeGraph::construct_graph(void)
     vertex_descriptor v = add_vertex(*this);
     // vertex properties
     this->operator[](v).uid = sites[i].uid();
+    this->operator[](v).dim = sites[i].num_orbitals();
     this->operator[](v).type = sites[i].type();
     this->operator[](v).stype = sites[i].type();
     this->operator[](v).atomid = sites[i].atomid();
     this->operator[](v).bravindex = sites[i].bravindex();
     this->operator[](v).coord = sites[i].coord();
     this->operator[](v).cell_coord = sites[i].cell_coord();
+    //std::cout << " i " << i << " = " << this->operator[](v).dim << "\n";
 
     // collect type value in a set
     vertex_types_set_.insert(sites[i].type());

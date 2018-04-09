@@ -20,6 +20,7 @@ namespace lattice {
 // Vertex properties
 struct VertexProperties {
   unsigned uid; // unitcell id
+  unsigned dim; // = num_orbitals
   unsigned type; 
   unsigned stype; // symmetry type
   unsigned atomid; 
@@ -90,6 +91,8 @@ public:
   unsigned num_site_types(void) const { return vertex_types_set_.size(); } 
   const unsigned& site_type(const site_iterator& vi) const { return this->operator[](*vi).type; }
   const unsigned& site_type(const site_descriptor& v) const { return this->operator[](v).type; }
+  const unsigned& site_dim(const site_iterator& vi) const { return this->operator[](*vi).dim; }
+  const unsigned& site_dim(const site_descriptor& v) const { return this->operator[](v).dim; }
   const unsigned& site_uid(const site_iterator& vi) const { return this->operator[](*vi).uid; }
   const unsigned& site_uid(const site_descriptor& v) const { return this->operator[](v).uid; }
   const unsigned& site_uid(const unsigned& i) const { return this->operator[](i).uid; }

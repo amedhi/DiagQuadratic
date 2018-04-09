@@ -16,7 +16,8 @@ MF_Model::MF_Model(const model::Hamiltonian& model,
   const lattice::LatticeGraph& graph)
 : model::Hamiltonian(model)
 {
-  dim_ = graph.lattice().num_basis_sites();
+  num_basis_sites_ = graph.lattice().num_basis_sites();
+  dim_ = graph.lattice().num_basis_orbitals();
   quadratic_block_up_.resize(dim_,dim_);
   pairing_block_.resize(dim_,dim_);
   work.resize(dim_,dim_);
@@ -31,7 +32,8 @@ int MF_Model::init(const lattice::Lattice& lattice)
 int MF_Model::finalize(const lattice::LatticeGraph& graph)
 {
   Model::finalize(graph.lattice());
-  dim_ = graph.lattice().num_basis_sites();
+  num_basis_sites_ = graph.lattice().num_basis_sites();
+  dim_ = graph.lattice().num_basis_orbitals();
   quadratic_block_up_.resize(dim_,dim_);
   pairing_block_.resize(dim_,dim_);
   work.resize(dim_,dim_);
@@ -59,18 +61,6 @@ void MF_Model::update_site_parameter(const std::string& pname, const double& pva
 
 void MF_Model::build_unitcell_terms(const lattice::LatticeGraph& graph)
 {
-  /*uc_siteterms_.resize(Model::num_siteterms());
-  uc_bondterms_.resize(Model::num_bondterms());
-  unsigned i = 0;
-  for (auto sterm=siteterms_begin(); sterm!=siteterms_end(); ++sterm) {
-    uc_siteterms_[i].build_siteterm(*sterm, graph);
-    i++;
-  }
-  i = 0;
-  for (auto bterm=bondterms_begin(); bterm!=bondterms_end(); ++bterm) {
-    uc_bondterms_[i].build_bondterm(*bterm, graph);
-    i++;
-  }*/
   // take only quadratic & pairing terms
   int num_siteterms = 0;
   int num_bondterms = 0;
@@ -164,11 +154,12 @@ void MF_Model::update_unitcell_terms(void)
 void UnitcellTerm::build_bondterm(const model::HamiltonianTerm& hamterm,
   const lattice::LatticeGraph& graph)
 {
-  dim_ = graph.lattice().num_basis_sites();
+  num_basis_sites_ = graph.lattice().num_basis_sites();
+  dim_ = graph.lattice().num_basis_orbitals();
   lattice::LatticeGraph::out_edge_iterator ei, ei_end;
   // get number of unique 'cell bond vectors'
   num_out_bonds_ = 0;
-  for (unsigned i=0; i<dim_; ++i) {
+  for (unsigned i=0; i<num_basis_sites_; ++i) {
     //std::cout << i << "\n";
     for (std::tie(ei, ei_end)=graph.out_bonds(i); ei!=ei_end; ++ei) {
       unsigned id = graph.vector_id(ei);
@@ -186,14 +177,13 @@ void UnitcellTerm::build_bondterm(const model::HamiltonianTerm& hamterm,
   expr_matrices_.clear();
   expr_matrices_.resize(num_out_bonds_);
   for (auto& M : expr_matrices_) {
-    M.resize(dim_);
-    for (unsigned i=0; i<dim_; ++i) M[i].resize(dim_);
+    M.resize(dim_,dim_);
   }
   // initialize expression matrices
   for (int id=0; id<num_out_bonds_; ++id) {
     for (int i=0; i<dim_; ++i) {
       for (int j=0; j<dim_; ++j) {
-        expr_matrices_[id][i][j] = "0";
+        expr_matrices_[id](i,j) = "0";
       }
     }
   }
@@ -201,22 +191,29 @@ void UnitcellTerm::build_bondterm(const model::HamiltonianTerm& hamterm,
   // operator
   op_ = hamterm.qn_operator();
   // build the matrices (for each 'bond vector')
-  for (unsigned i=0; i<dim_; ++i) {
+  for (unsigned i=0; i<num_basis_sites_; ++i) {
     for (std::tie(ei,ei_end)=graph.out_bonds(i); ei!=ei_end; ++ei) {
       unsigned id = graph.vector_id(ei);
       unsigned t = graph.target(ei);
       unsigned j = graph.site_uid(t);
       unsigned btype = graph.bond_type(ei);
-      // expression
-      std::string cc_expr(hamterm.coupling_expr(btype));
-      boost::trim(cc_expr);
-      if (cc_expr.size()>0) {
-        //if (cc_expr[0]!='-') expr_matrices_[id][i][j] += "+";
-        //expr_matrices_[id][i][j] += cc_expr;
-        expr_matrices_[id][i][j] += "+("+cc_expr+")";
+
+      strMatrix expr_mat = hamterm.coupling_expr(btype);
+      ComplexMatrix coeff_mat = hamterm.coupling(btype);
+      int rows = graph.site_dim(i);
+      int cols = graph.site_dim(j);
+      for (int m=0; m<rows; ++m) {
+        for (int n=0; n<cols; ++n) {
+          int p = graph.lattice().basis_index_number(i, m);
+          int q = graph.lattice().basis_index_number(j, n);
+          std::string cc_expr(expr_mat(m,n));
+          if (cc_expr.size()>0) {
+            expr_matrices_[id](p,q) += "+("+cc_expr+")";
+          }
+          // values
+          coeff_matrices_[id](p,q) += coeff_mat(m,n);
+        }
       }
-      // values
-      coeff_matrices_[id](i,j) += hamterm.coupling(btype);
       //std::cout << id << " " << coeff_matrices_[id](i,j) << "\n";
       bond_vectors_[id] = graph.vector(ei);
       //std::cout << i << " " << j << "\n"; 
@@ -240,35 +237,40 @@ void UnitcellTerm::build_bondterm(const model::HamiltonianTerm& hamterm,
 void UnitcellTerm::build_siteterm(const model::HamiltonianTerm& hamterm,
   const lattice::LatticeGraph& graph)
 {
-  dim_ = graph.lattice().num_basis_sites();
+  num_basis_sites_ = graph.lattice().num_basis_sites();
+  dim_ = graph.lattice().num_basis_orbitals();
   num_out_bonds_ = 1; // dummy, no real contrib
   bond_vectors_.resize(1);
   coeff_matrices_.resize(1);
   coeff_matrices_[0].resize(dim_,dim_);
   coeff_matrices_[0].setZero();
   expr_matrices_.resize(1);
-  expr_matrices_[0].resize(dim_);
-  for (unsigned i=0; i<dim_; ++i) expr_matrices_[0][i].resize(dim_);
+  expr_matrices_[0].resize(dim_,dim_);
   // initialize expression matrix
   for (int i=0; i<dim_; ++i) {
     for (int j=0; j<dim_; ++j) {
-      expr_matrices_[0][i][j] = "0";
+      expr_matrices_[0](i,j) = "0";
     }
   }
 
   // operator
   op_ = hamterm.qn_operator();
   // build the matrix 
-  for (unsigned i=0; i<dim_; ++i) {
+  for (unsigned i=0; i<num_basis_sites_; ++i) {
     unsigned stype = graph.site_type(i);
-    coeff_matrices_[0](i,i) = hamterm.coupling(stype);
+    //coeff_matrices_[0](i,i) = hamterm.coupling(stype);
     // expression
-    std::string cc_expr(hamterm.coupling_expr(stype));
-    boost::trim(cc_expr);
-    if (cc_expr.size()>0) {
-      //if (cc_expr[0]!='-') expr_matrices_[0][i][i] += "+";
-      //expr_matrices_[0][i][i] += cc_expr;
-      expr_matrices_[0][i][i] += "+("+cc_expr+")";
+    strMatrix expr_mat = hamterm.coupling_expr(stype);
+    ComplexMatrix coeff_mat = hamterm.coupling(stype);
+    for (int j=0; j<graph.site_dim(i); ++j) {
+      unsigned n = graph.lattice().basis_index_number(i, j);
+      coeff_matrices_[0](n,n) = coeff_mat(0,j);
+      std::string cc_expr(expr_mat(0,j));
+      boost::trim(cc_expr);
+      if (cc_expr.size()>0) {
+        expr_matrices_[0](n,n) += "+("+cc_expr+")";
+      }
+      n++;
     }
   }
   bond_vectors_[0] = Vector3d(0.0,0.0,0.0);
@@ -315,7 +317,7 @@ void UnitcellTerm::eval_coupling_constant(const model::ModelParams& pvals, const
     for (unsigned n=0; n<num_out_bonds_; ++n) {
       for (unsigned i=0; i<dim_; ++i) {
         for (unsigned j=0; j<dim_; ++j) {
-          std::string cc_expr(expr_matrices_[n][i][j]);
+          std::string cc_expr(expr_matrices_[n](i,j));
           if (cc_expr.size()>0) {
             expr.set_expr(cc_expr);
             coeff_matrices_[n](i,j) = expr.evaluate(); 

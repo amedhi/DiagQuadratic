@@ -28,7 +28,7 @@ const unsigned MAX_BOND_TYPES = 40;
 /*---------------lattice types-----------------*/
 enum class lattice_id {
   UNDEFINED, SQUARE, SQUARE_2BAND, CHAIN, HONEYCOMB, SIMPLECUBIC, 
-  KAGOME, PYROCHLORE
+  KAGOME, PYROCHLORE_V1, PYROCHLORE_3D
 };
 
 /*---------------Lattice site class-----------------*/
@@ -58,6 +58,7 @@ public:
   const unsigned& uid(void) const {return uid_;}
   const unsigned& type(void) const {return type_;}
   const unsigned& atomid(void) const {return atomid_;}
+  const unsigned& num_orbitals(void) const {return num_orbitals_;}
   const Vector3i& bravindex(void) const { return bravindex_; }
   const Vector3d& coord(void) const {return coord_;}
   const Vector3d& cell_coord(void) const {return cell_coord_;}
@@ -69,6 +70,7 @@ private:
   unsigned uid_ {0}; // local id within a unitcell
   unsigned type_ {0};
   unsigned atomid_ {0};
+  unsigned num_orbitals_ {1};
   Vector3i bravindex_ {Vector3i(0, 0, 0)};
   Vector3d coord_ {Vector3d(0.0, 0.0, 0.0)};
   Vector3d cell_coord_ {Vector3d(0.0, 0.0, 0.0)};
@@ -138,8 +140,7 @@ public:
   Unitcell() {}
   ~Unitcell() {}
   // setter functions
-  int add_site(const unsigned& type, const unsigned& atomid, const Vector3d& site_coord); 
-  int add_site(const unsigned& type, const Vector3d& site_coord); 
+  int add_site(const unsigned& type, const unsigned& num_orbitals, const Vector3d& site_coord); 
   int add_site(const Site& s) { sites.push_back(s); return sites.back().id(); }
   int add_site(const Site& s, const Vector3i& bravindex, const Vector3d& cell_coord);
   int add_bond(const Bond& b) { bonds.push_back(b); return bonds.back().id(); }
@@ -156,6 +157,7 @@ public:
   // getter functions
   unsigned num_sites(void) const { return sites.size(); }
   unsigned num_bonds(void) const { return bonds.size(); }
+  const unsigned& num_orbitals(void) const { return num_orbitals_; }
   const Vector3d& vector_a1(void) const { return a1; }
   const Vector3d& vector_a2(void) const { return a2; }
   const Vector3d& vector_a3(void) const { return a3; }
@@ -184,6 +186,7 @@ private:
   Vector3d coord_ {Vector3d(0.0, 0.0, 0.0)};
   std::vector<Site> sites;
   std::vector<Bond> bonds;
+  unsigned num_orbitals_ {0};
   std::map<unsigned,unsigned> sitetypes_map_; // user set value to contiguous value 
   std::map<unsigned,unsigned> bondtypes_map_; // user set value to contiguous value 
 };
@@ -201,8 +204,14 @@ public:
   // setter functions
   int construct(const input::Parameters& parms);
   void set_basis_vectors(const Vector3d& av1, const Vector3d& av2, const Vector3d& av3);
-  int add_basis_site(const unsigned& type, const unsigned& atomid, const Vector3d& site_coord);
-  int add_basis_site(const unsigned& type, const Vector3d& site_coord);
+  int add_basis_site(const Vector3d& site_coord);
+  int add_basis_site(const unsigned& num_orbitals, const Vector3d& site_coord);
+  int add_basis_site(const unsigned& type, const unsigned& num_orbitals, 
+    const Vector3d& site_coord);
+  int add_bond(const unsigned& src_id, const Vector3i& src_offset,
+    const unsigned& tgt_id, const Vector3i& tgt_offset); 
+  int add_bond(const unsigned& type, const unsigned& src_id, const Vector3i& src_offset,
+    const unsigned& tgt_id, const Vector3i& tgt_offset); 
   int add_bond(const unsigned& type, const unsigned& ngb, const unsigned& src_id, const Vector3i& src_offset,
     const unsigned& tgt_id, const Vector3i& tgt_offset); 
   int add_bond(const Bond& b); 
@@ -212,6 +221,7 @@ public:
   lattice_id id(void) const { return lid; }
   unsigned num_basis_sites(void) const { return Unitcell::num_sites(); }
   unsigned num_basis_bonds(void) const { return Unitcell::num_bonds(); }
+  unsigned num_basis_orbitals(void) const { return Unitcell::num_orbitals(); }
   const unsigned& dimension(void) const { return spatial_dim; }
   const unsigned& num_sites(void) const { return num_total_sites_; }
   const unsigned& num_unitcells(void) const { return num_total_cells_; }
@@ -241,6 +251,8 @@ public:
   bool connect_bond(Bond& bond, const std::vector<Site>& sites) const;
   const Site& basis_site(const unsigned& i) const { return Unitcell::site(i); }
   const Bond& basis_bond(const unsigned& i) const { return Unitcell::bond(i); }
+  const unsigned& basis_index_number(const unsigned& site, const unsigned& orbital) const
+    { return basis_index_[site][orbital]; }
 
   // for lattices with doped impurities
   //void add_new_bondtype(const unsigned& type);
@@ -268,6 +280,9 @@ private:
   unsigned num_layer_cells_{1};
   unsigned num_total_sites_{0};
   unsigned num_basis_sites_{0};
+
+  // basis state index numbering
+  std::vector<std::vector<unsigned> > basis_index_;
 
   // for lattices with impurities
   std::vector<Site> impurity_sites_;

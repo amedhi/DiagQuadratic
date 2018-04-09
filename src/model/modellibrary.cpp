@@ -30,6 +30,14 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
   model_name = inputs.set_value("model", "HUBBARD");
   boost::to_upper(model_name);
 
+  strMatrix expr_mat;
+  strMatrix::row_t expr_vec;
+  //smat.getfromtxt("./matrix.txt");
+  //smat(0,1) = "b";
+  //smat(1,0) = "c";
+  //smat(1,1) = "d";
+  //std::cout << smat << "\n";
+
   if (model_name == "HUBBARD") {
     mid = model_id::HUBBARD;
     // model parameters
@@ -61,10 +69,36 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
         add_parameter(name="t", defval=1.0, inputs);
         add_parameter(name="tsp", defval=1.0, inputs);
         // site operators
-        cc = CouplingConstant({0,"-(e0-4*t)"}, {1,"(e0-4*t)"});
+        expr_vec.resize(2);
+        expr_vec[0] = "-(e0-4*t)";
+        expr_vec[1] = "(e0-4*t)";
+        cc = expr_vec;
         add_siteterm(name="hopping", cc, op::ni_up());
         add_siteterm(name="hopping", cc, op::ni_dn());
 
+        // bond operators
+        cc.create(2);
+        expr_mat.resize(2,2);
+        expr_mat(0,0) = "-t"; expr_mat(0,1) = "-i*tsp";
+        expr_mat(1,0) = "-i*tsp"; expr_mat(1,1) = "t";
+        cc.add_type(0, expr_mat);
+        expr_mat(0,0) = "-t"; expr_mat(0,1) = "-tsp";
+        expr_mat(1,0) = "tsp"; expr_mat(1,1) = "t";
+        cc.add_type(1, expr_mat);
+        add_bondterm(name="hopping", cc, op::upspin_hop());
+
+        expr_mat(0,0) = "-t"; expr_mat(0,1) = "i*tsp";
+        expr_mat(1,0) = "i*tsp"; expr_mat(1,1) = "t";
+        cc.add_type(0, expr_mat);
+        expr_mat(0,0) = "-t"; expr_mat(0,1) = "-tsp";
+        expr_mat(1,0) = "tsp"; expr_mat(1,1) = "t";
+        cc.add_type(1, expr_mat);
+        add_bondterm(name="hopping", cc, op::dnspin_hop());
+
+        /*
+        cc = CouplingConstant({0,"-(e0-4*t)"}, {1,"(e0-4*t)"});
+        add_siteterm(name="hopping", cc, op::ni_up());
+        add_siteterm(name="hopping", cc, op::ni_dn());
         // upspin hop
         cc = CouplingConstant({0,"-t"}, {1,"-i*tsp"},
           {2,"-i*tsp"}, {3,"t"}, {4,"-tsp"},{5,"tsp"});
@@ -76,9 +110,11 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
         // Hubbard interaction
         add_parameter(name="U", defval=0.0, inputs);
         add_siteterm(name="hubbard", cc="U", op::hubbard_int());
+        */
         break;
 
       case lattice::lattice_id::HONEYCOMB:
+        /*
         add_parameter(name="t", defval=1.0, inputs);
         add_parameter(name="lambda", defval=1.0, inputs);
         // upspin hop
@@ -92,9 +128,11 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
         // Hubbard interaction
         add_parameter(name="U", defval=0.0, inputs);
         add_siteterm(name="hubbard", cc="U", op::hubbard_int());
+        */
         break;
 
       case lattice::lattice_id::KAGOME:
+        /*
         add_parameter(name="t", defval=1.0, inputs);
         add_parameter(name="t2", defval=1.0, inputs);
         add_parameter(name="lambda", defval=1.0, inputs);
@@ -110,9 +148,11 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
         // Hubbard interaction
         add_parameter(name="U", defval=0.0, inputs);
         add_siteterm(name="hubbard", cc="U", op::hubbard_int());
+        */
         break;
 
-      case lattice::lattice_id::PYROCHLORE:
+      case lattice::lattice_id::PYROCHLORE_V1:
+        /*
         add_parameter(name="t", defval=1.0, inputs);
         add_parameter(name="t2", defval=1.0, inputs);
         add_parameter(name="lambda", defval=1.0, inputs);
@@ -129,6 +169,29 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
         // Hubbard interaction
         add_parameter(name="U", defval=0.0, inputs);
         add_siteterm(name="hubbard", cc="U", op::hubbard_int());
+        */
+        break;
+
+      case lattice::lattice_id::PYROCHLORE_3D:
+        /*
+        add_parameter(name="t", defval=1.0, inputs);
+        add_parameter(name="lambda", defval=1.0, inputs);
+
+        // upspin hop
+        cc = CouplingConstant({0,"-t+i*lambda"},{1,"-t-i*lambda"},
+          {2,"-t2+i*lambda2"},{3,"-t2-i*lambda2"},{4,"-th"});
+        add_bondterm(name="hopping", cc, op::upspin_hop());
+        // dnspin hop
+        cc = CouplingConstant({0,"-t-i*lambda"},{1,"-t+i*lambda"},
+          {2,"-t2-i*lambda2"},{3,"-t2+i*lambda2"},{4,"-th"});
+
+        add_siteterm(name="orbital", cc="lambda", op::ni_sigma());
+
+        //add_bondterm(name="hopping", cc, op::dnspin_hop());
+        // Hubbard interaction
+        //add_parameter(name="U", defval=0.0, inputs);
+        //add_siteterm(name="hubbard", cc="U", op::hubbard_int());
+        */
         break;
 
       default:

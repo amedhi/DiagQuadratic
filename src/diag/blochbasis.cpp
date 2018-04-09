@@ -206,13 +206,41 @@ void BlochBasis::gen_mesh_neighbors(const lattice::Lattice& lattice)
 
 void BlochBasis::make_subspace_basis(const lattice::LatticeGraph& graph)
 {
+  int orbitals_per_cell = 0;
+  unsigned n = graph.lattice().num_basis_sites();
+  for (unsigned i=0; i<n; ++i) {
+    basis_state s = graph.site(i);
+    unsigned uid = graph.site_uid(i);
+    if (s != graph.site(uid))
+      throw std::logic_error("blochbasis::make_site_basis: unexpected graph property.");
+    orbitals_per_cell += graph.site_dim(i);
+  }
+  subspace_dimension_ = n + orbitals_per_cell;
+  subspace_basis_.resize(subspace_dimension_);
+  for (unsigned i=0; i<subspace_dimension_; ++i) {
+    subspace_basis_[i] = i; 
+  }
+  null_idx_ = subspace_basis_.size();
+  // index of the 'representative state' of a site
+  representative_state_idx_.resize(graph.num_sites());
+  //translation_vectors_.resize(graph.num_sites());
+  for (auto& idx : representative_state_idx_) idx = null_idx_;
+  for (unsigned i=0; i<graph.num_sites(); ++i) {
+    basis_state s = graph.site(i);
+    unsigned uid = graph.site_uid(i);
+    representative_state_idx_[s] = uid;
+    //translation_vectors_[s] = graph.site_cellcord(i);
+    //std::cout << translation_vectors_[s] << "\n"; getchar();
+  }
+
+  /*
   subspace_dimension_ = graph.lattice().num_basis_sites();
   subspace_basis_.resize(subspace_dimension_);
   for (unsigned i=0; i<subspace_dimension_; ++i) {
     basis_state s = graph.site(i);
     unsigned uid = graph.site_uid(i);
     if (s != graph.site(uid))
-      throw std::logic_error("BlochBasis::make_site_basis: unexpected graph property.");
+      throw std::logic_error("blochbasis::make_site_basis: unexpected graph property.");
     subspace_basis_[i] = s; 
   }
   null_idx_ = subspace_basis_.size();
@@ -227,6 +255,7 @@ void BlochBasis::make_subspace_basis(const lattice::LatticeGraph& graph)
     //translation_vectors_[s] = graph.site_cellcord(i);
     //std::cout << translation_vectors_[s] << "\n"; getchar();
   }
+  */
 }
 
 

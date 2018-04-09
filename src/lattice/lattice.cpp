@@ -25,13 +25,13 @@ namespace lattice {
 unsigned Site::num_site = 0;
 
 // ctor
-Site::Site(const unsigned& uid, const unsigned& type, const unsigned& atomid, const Vector3i& bravindex, 
-    const Vector3d& coord, const Vector3d& cell_coord)
+Site::Site(const unsigned& uid, const unsigned& type, const unsigned& num_orbitals,
+ const Vector3i& bravindex, const Vector3d& coord, const Vector3d& cell_coord)
 {
   id_ = num_site++;
   uid_ = uid;
   type_ = type;
-  atomid_ = atomid;
+  num_orbitals_ = num_orbitals;
   bravindex_ = bravindex_;
   coord_ = coord;
   cell_coord_ = cell_coord_;
@@ -155,22 +155,11 @@ void Unitcell::set_basis(const Vector3d& av1, const Vector3d& av2, const Vector3
   a1 = av1; a2 = av2; a3 = av3;
 }
 
-int Unitcell::add_site(const unsigned& type, const unsigned& atomid, const Vector3d& site_coord)
-{
-  if (atomid > sites.size()) {
-    throw std::range_error("error: add_site:: out-of-range value for argument-3");
-  }
-  unsigned uid = sites.size();
-  sites.push_back(Site(uid, type, atomid, bravindex(), site_coord, coord())); 
-  if (max_site_type_val < type) max_site_type_val = type;
-  return sites.back().id(); 
-}
-
-int Unitcell::add_site(const unsigned& type, const Vector3d& site_coord)
+int Unitcell::add_site(const unsigned& type, const unsigned& num_orbitals, const Vector3d& site_coord)
 {
   unsigned uid = sites.size();
-  unsigned atomid = sites.size();
-  sites.push_back(Site(uid, type, atomid, bravindex(), site_coord, coord())); 
+  //unsigned atomid = sites.size();
+  sites.push_back(Site(uid, type, num_orbitals, bravindex(), site_coord, coord())); 
   if (max_site_type_val < type) max_site_type_val = type;
   return sites.back().id(); 
 }
@@ -223,6 +212,9 @@ void Unitcell::finalize(void)
     unsigned i = sitetypes_map_[s.type()];
     s.reset_type(i);
   }
+  // number of orbitals
+  num_orbitals_ = 0;
+  for (auto& s : sites) num_orbitals_ += s.num_orbitals();
 
   // same for bonds
   bondtypes_map_.clear();
@@ -289,14 +281,32 @@ void Lattice::set_basis_vectors(const Vector3d& av1, const Vector3d& av2, const 
   Unitcell::set_basis(av1, av2, av3); 
 }
 
-int Lattice::add_basis_site(const unsigned& type, const unsigned& atomid, const Vector3d& site_coord)
+int Lattice::add_basis_site(const Vector3d& site_coord)
 {
-  return Unitcell::add_site(type, atomid, site_coord);  
+  return Unitcell::add_site(0, 1, site_coord);  
 }
 
-int Lattice::add_basis_site(const unsigned& type, const Vector3d& site_coord)
+int Lattice::add_basis_site(const unsigned& num_orbitals, const Vector3d& site_coord)
 {
-  return Unitcell::add_site(type, site_coord);  
+  return Unitcell::add_site(0, num_orbitals, site_coord);  
+}
+
+int Lattice::add_basis_site(const unsigned& type, const unsigned& num_orbitals, 
+  const Vector3d& site_coord)
+{
+  return Unitcell::add_site(type, num_orbitals, site_coord);  
+}
+
+int Lattice::add_bond(const unsigned& src_id, const Vector3i& src_offset,
+    const unsigned& tgt_id, const Vector3i& tgt_offset)
+{
+  return Unitcell::add_bond(0, 1, src_id, src_offset, tgt_id, tgt_offset);
+}
+
+int Lattice::add_bond(const unsigned& type, const unsigned& src_id, const Vector3i& src_offset,
+    const unsigned& tgt_id, const Vector3i& tgt_offset)
+{
+  return Unitcell::add_bond(type, 1, src_id, src_offset, tgt_id, tgt_offset);
 }
 
 int Lattice::add_bond(const unsigned& type, const unsigned& ngb, const unsigned& src_id, const Vector3i& src_offset,

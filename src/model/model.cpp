@@ -10,33 +10,6 @@
 
 namespace model {
 
-/*unsigned Hamiltonian::add_sitebasis(SiteBasis& sitebasis)
-{
-  // it's an error if any 'sitebasis' was already added
-  if (basis_.size()>0) 
-    throw std::logic_error("Hamiltonian::add_sitebasis: 'sitebasis' already exists, overwrite not allowed.");
-  // the 'sitebasis' is implicitly defined for all site types
-  for (const auto& elem : sitetypes_map_) {
-    unsigned mapped_type = elem.second;
-    basis_.add_sitebasis(mapped_type,sitebasis); 
-  }
-  return basis_.size();
-}
-
-unsigned Hamiltonian::add_sitebasis(const unsigned& type, SiteBasis& sitebasis)
-{
-  // add 'sitebasis' of the given 'site type'
-  auto it=sitetypes_map_.find(type);
-  if (it==sitetypes_map_.end()) 
-    throw std::range_error("Hamiltonian::add_sitebasis: specified 'site type' not found");
-  unsigned mapped_type = it->second;
-  // it's an error if any 'sitebasis' was already added
-  if (!basis_.add_sitebasis(mapped_type,sitebasis)) 
-    throw std::logic_error("Hamiltonian::add_sitebasis: 'sitebasis' already exists, overwrite not allowed.");
-  return basis_.size();
-}
-*/
-
 
 unsigned Hamiltonian::add_siteterm(const std::string& name, const CouplingConstant& cc, 
   const op::quantum_op& op)
@@ -46,9 +19,9 @@ unsigned Hamiltonian::add_siteterm(const std::string& name, const CouplingConsta
   cc_remapped.clear_map();
   if (cc.size()==1 && cc.begin()->first==CouplingConstant::global_type) {
     // the 'cc' is implicitly defined for all types
-    std::string cc_expr = cc.begin()->second;
+    strMatrix expr_mat = cc.begin()->second;
     for (const auto& m : sitetypes_map_) {
-      cc_remapped.insert({m.second, cc_expr});
+      cc_remapped.insert({m.second, expr_mat});
     }
   }
   else {
@@ -76,10 +49,10 @@ unsigned Hamiltonian::add_bondterm(const std::string& name, const CouplingConsta
   cc_remapped.clear_map();
   if (cc.size()==1 && cc.begin()->first==CouplingConstant::global_type) {
     // the 'cc' is implicitly defined for all types
-    std::string cc_expr = cc.begin()->second;
+    strMatrix expr_mat = cc.begin()->second;
     for (const auto& m : bondtypes_map_) {
       //std::cout << "m= " << m.second << " cc_expr = " << cc_expr << "\n";
-      cc_remapped.insert({m.second, cc_expr});
+      cc_remapped.insert({m.second, expr_mat});
     }
   }
   else {
@@ -104,7 +77,7 @@ unsigned Hamiltonian::add_disorder_term(const std::string& name, const op::quant
   // set dummy 'cc' 
   CouplingConstant cc;
   for (const auto& m : sitetypes_map_) {
-    cc.insert({m.second, "0.0"});
+    cc.insert({m.second, strMatrix("0.0")});
   }
   unsigned num_sitetypes = sitetypes_map_.size();
   this->disorder_terms_.push_back(HamiltonianTerm(name,op,cc,num_sitetypes));

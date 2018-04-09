@@ -16,6 +16,7 @@
 #include <vector>
 #include <map>
 #include <stdexcept>
+#include "strmatrix.h"
 #include "../lattice/lattice.h"
 #include "./hamiltonian_term.h"
 
