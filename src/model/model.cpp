@@ -96,6 +96,16 @@ int Hamiltonian::init(const lattice::Lattice& lattice)
   // maps of site & bond type values (to contigous type values)
   sitetypes_map_ = lattice.sitetypes_map();
   bondtypes_map_ = lattice.bondtypes_map();
+
+  //  sitetypes to sitedim map
+  /*type_dim_map_.clear();
+  for (unsigned i=0; i<lattice.num_basis_sites(); ++i) {
+    unsigned type = lattice.basis_site(i).type();
+    unsigned dim = lattice.basis_site(i).num_orbitals();
+    unsigned mapped_type = sitetypes_map_.at(type);
+    type_dim_map_.insert({mapped_type, dim});
+  }*/
+
   // maps of a given bond type to the types of its target
   /*bond_sites_map_.clear();
   for (unsigned i=0; i<lattice.num_basis_bonds(); ++i) {

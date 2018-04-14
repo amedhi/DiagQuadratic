@@ -20,7 +20,7 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
   //std::vector<MatrixElement> matrix_elem(20);
   double defval;
   //unsigned sitetype, change, type, src_type, tgt_type;
-  std::string name; //, matrixelem, op, qn, site, src, tgt, fact;
+  std::string name, path; //, matrixelem, op, qn, site, src, tgt, fact;
   //SiteBasis site_basis;
   //BasisDescriptor basis;
   //QuantumNumber::value_type min, max, step;
@@ -173,25 +173,45 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
         break;
 
       case lattice::lattice_id::PYROCHLORE_3D:
-        /*
         add_parameter(name="t", defval=1.0, inputs);
         add_parameter(name="lambda", defval=1.0, inputs);
 
-        // upspin hop
-        cc = CouplingConstant({0,"-t+i*lambda"},{1,"-t-i*lambda"},
-          {2,"-t2+i*lambda2"},{3,"-t2-i*lambda2"},{4,"-th"});
+        // site term
+        expr_vec.resize(6);
+        expr_vec[0] = "lambda"; expr_vec[1] = "lambda";
+        expr_vec[2] = "-0.5*lambda"; expr_vec[3] = "-0.5*lambda";
+        expr_vec[4] = "-0.5*lambda"; expr_vec[5] = "-0.5*lambda";
+        cc.create(4);
+        cc.add_type(0, expr_vec);
+        cc.add_type(1, expr_vec);
+        cc.add_type(2, expr_vec);
+        cc.add_type(3, expr_vec);
+        add_siteterm(name="onsite", cc, op::ni_up());
+
+        // bond operators
+        path = "../PyrochloreIrdidate/hoppings/";
+        cc.create(9);
+        expr_mat.resize(6,6);
+        expr_mat.getfromtxt(path+"intracell_01.txt");
+        cc.add_type(0, expr_mat);
+        expr_mat.getfromtxt(path+"intracell_02.txt");
+        cc.add_type(1, expr_mat);
+        expr_mat.getfromtxt(path+"intracell_03.txt");
+        cc.add_type(2, expr_mat);
+        expr_mat.getfromtxt(path+"intracell_12.txt");
+        cc.add_type(3, expr_mat);
+        expr_mat.getfromtxt(path+"intracell_13.txt");
+        cc.add_type(4, expr_mat);
+        expr_mat.getfromtxt(path+"intracell_23.txt");
+        cc.add_type(5, expr_mat);
+
+        expr_mat.getfromtxt(path+"intercell_10.txt");
+        cc.add_type(6, expr_mat);
+        expr_mat.getfromtxt(path+"intercell_20.txt");
+        cc.add_type(7, expr_mat);
+        expr_mat.getfromtxt(path+"intercell_30.txt");
+        cc.add_type(8, expr_mat);
         add_bondterm(name="hopping", cc, op::upspin_hop());
-        // dnspin hop
-        cc = CouplingConstant({0,"-t-i*lambda"},{1,"-t+i*lambda"},
-          {2,"-t2-i*lambda2"},{3,"-t2+i*lambda2"},{4,"-th"});
-
-        add_siteterm(name="orbital", cc="lambda", op::ni_sigma());
-
-        //add_bondterm(name="hopping", cc, op::dnspin_hop());
-        // Hubbard interaction
-        //add_parameter(name="U", defval=0.0, inputs);
-        //add_siteterm(name="hubbard", cc="U", op::hubbard_int());
-        */
         break;
 
       default:

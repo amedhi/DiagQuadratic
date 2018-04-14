@@ -202,6 +202,9 @@ void UnitcellTerm::build_bondterm(const model::HamiltonianTerm& hamterm,
       ComplexMatrix coeff_mat = hamterm.coupling(btype);
       int rows = graph.site_dim(i);
       int cols = graph.site_dim(j);
+      if ((expr_mat.rows()!=rows) && (expr_mat.cols()!=cols)) {
+        throw std::runtime_error("Dimension mismatch in the 'bondterm'");
+      }
       for (int m=0; m<rows; ++m) {
         for (int n=0; n<cols; ++n) {
           int p = graph.lattice().basis_index_number(i, m);
@@ -262,6 +265,9 @@ void UnitcellTerm::build_siteterm(const model::HamiltonianTerm& hamterm,
     // expression
     strMatrix expr_mat = hamterm.coupling_expr(stype);
     ComplexMatrix coeff_mat = hamterm.coupling(stype);
+    if ((expr_mat.rows()!=1) && (expr_mat.cols()!=graph.site_dim(i))) {
+      throw std::runtime_error("Dimension mismatch in the 'siteterm'");
+    }
     for (int j=0; j<graph.site_dim(i); ++j) {
       unsigned n = graph.lattice().basis_index_number(i, j);
       coeff_matrices_[0](n,n) = coeff_mat(0,j);
@@ -323,8 +329,7 @@ void UnitcellTerm::eval_coupling_constant(const model::ModelParams& pvals, const
             coeff_matrices_[n](i,j) = expr.evaluate(); 
             //std::cout << "cc = " << cc_expr << "\n"; getchar();
           }
-          else
-            coeff_matrices_[n](i,j) = 0.0;
+          else coeff_matrices_[n](i,j) = 0.0;
         }
       }
     }

@@ -51,20 +51,20 @@ void BlochBasis::make_kpoints(const lattice::Lattice& lattice)
   using bc = lattice::boundary_type;
 
   // reciprocal lattice vectors 
-  a1 = lattice.vector_a1();
-  a2 = lattice.vector_a2();
-  a3 = lattice.vector_a3();
   b1 = Vector3d(0.0,0.0,0.0);
   b2 = Vector3d(0.0,0.0,0.0);
   b3 = Vector3d(0.0,0.0,0.0);
 
   unsigned symmetry_type = 0;
   if (lattice.bc1() == bc::periodic) {
+    a1 = lattice.vector_a1();
     b1 = two_pi() * a1 / a1.dot(a1); 
     symmetry_type = symmetry_type + 1;
   } 
 
   if (lattice.bc2() == bc::periodic) {
+    a1 = lattice.vector_a2();
+    a2 = lattice.vector_a2();
     switch (symmetry_type) {
       case 0:
         b2 = two_pi() * a2 / a2.dot(a2); 
@@ -81,6 +81,9 @@ void BlochBasis::make_kpoints(const lattice::Lattice& lattice)
   } 
 
   if (lattice.bc3() == bc::periodic) {
+    a1 = lattice.vector_a1();
+    a2 = lattice.vector_a2();
+    a3 = lattice.vector_a3();
     switch (symmetry_type) {
       case 0:
         b3 = two_pi() * a3 / a3.dot(a3); 
@@ -106,6 +109,14 @@ void BlochBasis::make_kpoints(const lattice::Lattice& lattice)
       default: break;
     }
   }
+
+  /*std::cout << "a1 = " << a1.transpose() << "\n"; 
+  std::cout << "a2 = " << a2.transpose() << "\n"; 
+  std::cout << "a3 = " << a3.transpose() << "\n"; 
+  std::cout << "b1 = " << b1.transpose() << "\n"; 
+  std::cout << "b2 = " << b2.transpose() << "\n"; 
+  std::cout << "b3 = " << b3.transpose() << "\n"; 
+  getchar();*/
 
   // antiperiodic boundary condition
   Vector3d antipb_shift(0.0, 0.0, 0.0);

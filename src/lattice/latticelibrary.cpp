@@ -241,6 +241,7 @@ int Lattice::define_lattice(void)
     lid = lattice_id::PYROCHLORE_3D;
     // basis vectors
     set_basis_vectors(a1=vec(0,2,2), a2=vec(2,0,2), a3=vec(2,2,0));
+    //set_basis_vectors(a1=vec(2,0,2), a2=vec(0,2,2), a3=vec(2,2,0));
     // add sites
     int orbitals;
     // Ir site-0
@@ -249,15 +250,22 @@ int Lattice::define_lattice(void)
     add_basis_site(type=2, orbitals=6, coord=0.5*basis_vector_a2());
     add_basis_site(type=3, orbitals=6, coord=0.5*basis_vector_a3());
 
-    // NN-1 bonds
-    //add_bond(type=0,src=0,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,0,0));
-    //add_bond(type=0,src=0,src_offset=pos(0,0,0),tgt=2,tgt_offset=pos(0,0,0));
-    //add_bond(type=0,src=0,src_offset=pos(0,0,0),tgt=3,tgt_offset=pos(0,0,0));
-    //for (int orb1=0; orb1<6; ++orb1) {
-    //  for (int orb2=0; orb2<6; ++orb2) {
-    //    add_bond(type=0,ngb=1,src=orb1,src_offset=pos(0,0,0),tgt=6+orb2,tgt_offset=pos(0,0,0));
-    //  }
-    //}
+    // Intra-cell bonds
+    add_bond(type=0,src=0,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,0,0));
+    add_bond(type=1,src=0,src_offset=pos(0,0,0),tgt=2,tgt_offset=pos(0,0,0));
+    add_bond(type=2,src=0,src_offset=pos(0,0,0),tgt=3,tgt_offset=pos(0,0,0));
+    add_bond(type=3,src=1,src_offset=pos(0,0,0),tgt=2,tgt_offset=pos(0,0,0));
+    add_bond(type=4,src=1,src_offset=pos(0,0,0),tgt=3,tgt_offset=pos(0,0,0));
+    add_bond(type=5,src=2,src_offset=pos(0,0,0),tgt=3,tgt_offset=pos(0,0,0));
+
+    // Inter-cell bonds
+    add_bond(type=6,src=1,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(1,0,0));
+    add_bond(type=7,src=2,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(0,1,0));
+    add_bond(type=8,src=3,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(0,0,1));
+
+    add_bond(type=3,src=1,src_offset=pos(0,0,0),tgt=2,tgt_offset=pos(1,-1,0));
+    add_bond(type=4,src=1,src_offset=pos(0,0,0),tgt=3,tgt_offset=pos(1,0,-1));
+    add_bond(type=5,src=2,src_offset=pos(0,0,0),tgt=3,tgt_offset=pos(0,1,-1));
   }
 
 

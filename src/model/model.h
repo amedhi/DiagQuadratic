@@ -102,6 +102,7 @@ private:
   //BasisDescriptor basis_;
   std::map<unsigned, unsigned> sitetypes_map_;
   std::map<unsigned, unsigned> bondtypes_map_;
+  std::map<unsigned, unsigned> type_dim_map_;
   //BondTerm::BondSiteMap bond_sites_map_;  
   std::vector<HamiltonianTerm> bond_terms_;
   std::vector<HamiltonianTerm> site_terms_;

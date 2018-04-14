@@ -32,22 +32,35 @@ Diag::Diag(const input::Parameters& inputs)
   }
 
   if (need_ebands_symm_) {
-    //std::cout << "b1 = " << blochbasis_.vector_b1().transpose() << "\n";
-    //std::cout << "b2 = " << blochbasis_.vector_b2().transpose() << "\n";
-    //std::cout << "b3 = " << blochbasis_.vector_b3().transpose() << "\n";
-    Vector3d K_point = 0.5*(blochbasis_.vector_b1()-blochbasis_.vector_b2());
-    Vector3d M_point = 0.5*blochbasis_.vector_b1();
-    Vector3d G_point = Vector3d(0,0,0);
-  
+    // High symmetry BZ points for FCC lattice
+    Vector3d Gamma = Vector3d(0,0,0);
+    Vector3d X = 0.5*(blochbasis_.vector_b2()+blochbasis_.vector_b3());
+    Vector3d W = (0.25*blochbasis_.vector_b1()+0.50*blochbasis_.vector_b2()
+                     +0.75*blochbasis_.vector_b3());
+    Vector3d L = 0.5*(blochbasis_.vector_b1()+blochbasis_.vector_b2()
+                     +blochbasis_.vector_b3());
+    Vector3d K = (3.0/8*blochbasis_.vector_b1()+3.0/8*blochbasis_.vector_b2()
+                     +3.0/4*blochbasis_.vector_b3());
+    /*
+    std::cout << "W = " << W.transpose() << "\n"; 
+    std::cout << "L = " << L.transpose() << "\n"; 
+    std::cout << "K = " << K.transpose() << "\n"; 
+    getchar();
+    */
+
     int N = 100;
-    Vector3d step = (K_point-G_point)/N;
-    //std::cout << "K = " << step.transpose() << "\n";
-    for (int i=0; i<N; ++i) symm_line_.push_back(G_point+i*step);
-    step = (M_point-K_point)/N;
-    for (int i=0; i<N; ++i) symm_line_.push_back(K_point+i*step);
-    step = (G_point-M_point)/N;
-    for (int i=0; i<N; ++i) symm_line_.push_back(M_point+i*step);
-    symm_line_.push_back(G_point);
+    Vector3d step = (X-Gamma)/N;
+    for (int i=0; i<N; ++i) symm_line_.push_back(Gamma+i*step);
+    step = (W-X)/N;
+    for (int i=0; i<N; ++i) symm_line_.push_back(X+i*step);
+    step = (L-W)/N;
+    for (int i=0; i<N; ++i) symm_line_.push_back(W+i*step);
+    step = (Gamma-L)/N;
+    for (int i=0; i<N; ++i) symm_line_.push_back(L+i*step);
+    step = (K-Gamma)/N;
+    for (int i=0; i<N; ++i) symm_line_.push_back(Gamma+i*step);
+    step = (X-K)/N;
+    for (int i=0; i<N; ++i) symm_line_.push_back(K+i*step);
   }
 }
 
@@ -80,12 +93,13 @@ int Diag::run(const input::Parameters& inputs)
       mf_model_.construct_kspace_block(kvec);
       //std::cout << mf_model_.quadratic_spinup_block() << "\n"; std::getchar();
       es_k_up_.compute(mf_model_.quadratic_spinup_block(), Eigen::EigenvaluesOnly);
-      if (k%graph_.lattice().size1()==0) of << "\n";
+      //if (k%graph_.lattice().size1()==0) of << "\n";
       of << std::setw(6) << k; 
       of << std::setw(14) << kvec(0) << std::setw(14) << kvec(1); 
       of << std::setw(14) << es_k_up_.eigenvalues().transpose() << "\n";
     }
-    of << "\n\n"; 
+    //of << "\n\n"; 
+    of << "\n"; 
   } 
   if (need_ebands_symm_) {
     for (unsigned k=0; k<symm_line_.size(); ++k) {
