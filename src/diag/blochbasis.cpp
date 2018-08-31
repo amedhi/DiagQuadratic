@@ -63,7 +63,7 @@ void BlochBasis::make_kpoints(const lattice::Lattice& lattice)
   } 
 
   if (lattice.bc2() == bc::periodic) {
-    a1 = lattice.vector_a2();
+    a1 = lattice.vector_a1();
     a2 = lattice.vector_a2();
     switch (symmetry_type) {
       case 0:

@@ -316,6 +316,7 @@ void UnitcellTerm::eval_coupling_constant(const model::ModelParams& pvals, const
 
 void UnitcellTerm::eval_coupling_constant(const model::ModelParams& pvals, const model::ModelParams& cvals)
 {
+  //std::cout << "------eval_coupling_constant---------\n"; getchar();
   expr::ComplexExpr expr;
   for (const auto& p : pvals) expr.add_var(p.first, p.second);
   for (const auto& c : cvals) expr.add_var(c.first, c.second);
