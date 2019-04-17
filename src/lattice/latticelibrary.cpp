@@ -170,7 +170,6 @@ int Lattice::define_lattice(void)
   }
 
   else if (lname == "PYROCHLORE_V1") {
-    /*
     // type
     lid = lattice_id::PYROCHLORE_V1;
     // basis vectors
@@ -180,20 +179,22 @@ int Lattice::define_lattice(void)
     double z = std::sqrt(8.0/3.0);
     set_basis_vectors(a1=vec(x,y,0), a2=vec(-x,y,0), a3=vec(0,y2,z));
     // add sites
+    int orbitals;
     // A-site
-    add_basis_site(type=0, coord=vec(0,0,0));
+    add_basis_site(type=0, orbitals=1, coord=vec(0,0,0));
     // B-site
     x = 0.5; y = 0.5*std::sqrt(3.0);
-    add_basis_site(type=1, coord=vec(x,y,0));
+    add_basis_site(type=1, orbitals=1, coord=vec(x,y,0));
     // C-site
-    add_basis_site(type=2, coord=vec(-x,y,0));
+    add_basis_site(type=2, orbitals=1, coord=vec(-x,y,0));
     // D-site
     y = 1.0/std::sqrt(3.0);
     z = std::sqrt(2.0/3.0);
-    add_basis_site(type=3, coord=vec(0,y,z));
+    add_basis_site(type=3, orbitals=1, coord=vec(0,y,z));
 
     // NN-1 bonds
     // A-B (intra-cell) 
+    int ngb;
     add_bond(type=0,ngb=1,src=0,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,0,0));
     // A-C (intra-cell) 
     add_bond(type=1,ngb=1,src=0,src_offset=pos(0,0,0),tgt=2,tgt_offset=pos(0,0,0));
@@ -233,7 +234,6 @@ int Lattice::define_lattice(void)
     add_bond(type=4,ngb=1,src=3,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(-1,0,1));
     // D-C (inter-cell) 
     add_bond(type=4,ngb=1,src=3,src_offset=pos(0,0,0),tgt=2,tgt_offset=pos(0,-1,1));
-    */
   }
 
   else if (lname == "PYROCHLORE_3D") {

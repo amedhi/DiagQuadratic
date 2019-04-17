@@ -152,14 +152,29 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
         break;
 
       case lattice::lattice_id::PYROCHLORE_V1:
-        /*
         add_parameter(name="t", defval=1.0, inputs);
         add_parameter(name="t2", defval=1.0, inputs);
         add_parameter(name="lambda", defval=1.0, inputs);
         add_parameter(name="lambda2", defval=1.0, inputs);
         add_parameter(name="th", defval=1.0, inputs);
         // upspin hop
-        cc = CouplingConstant({0,"-t+i*lambda"},{1,"-t-i*lambda"},
+        cc.create(5);
+        cc.add_type(0,"-t+i*lambda");
+        cc.add_type(1,"-t-i*lambda");
+        cc.add_type(2,"-t2+i*lambda2");
+        cc.add_type(3,"-t2-i*lambda2");
+        cc.add_type(4,"-th");
+        add_bondterm(name="hopping", cc, op::upspin_hop());
+        cc.create(5);
+        cc.add_type(0,"-t-i*lambda");
+        cc.add_type(1,"-t+i*lambda");
+        cc.add_type(2,"-t2-i*lambda2");
+        cc.add_type(3,"-t2+i*lambda2");
+        cc.add_type(4,"-th");
+        add_bondterm(name="hopping", cc, op::dnspin_hop());
+        add_siteterm(name="hubbard", cc="U", op::hubbard_int());
+
+        /*cc = CouplingConstant({0,"-t+i*lambda"},{1,"-t-i*lambda"},
           {2,"-t2+i*lambda2"},{3,"-t2-i*lambda2"},{4,"-th"});
         add_bondterm(name="hopping", cc, op::upspin_hop());
         // dnspin hop
@@ -168,7 +183,6 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
         add_bondterm(name="hopping", cc, op::dnspin_hop());
         // Hubbard interaction
         add_parameter(name="U", defval=0.0, inputs);
-        add_siteterm(name="hubbard", cc="U", op::hubbard_int());
         */
         break;
 
@@ -214,6 +228,55 @@ int Hamiltonian::define_model(const input::Parameters& inputs,
         add_bondterm(name="hopping", cc, op::upspin_hop());
         break;
 
+      default:
+        throw std::range_error("*error: modellibrary: model not defined for the lattice"); 
+    }
+  }
+  // PYROCHLORE model NOT in terms of spin-orbit coupled basis, but 
+  // product basis.
+  else if (model_name == "PYROCHLORE") {
+    mid = model_id::PYROCHLORE;
+    switch (lattice.id()) {
+      case lattice::lattice_id::PYROCHLORE_3D:
+        add_parameter(name="t", defval=1.0, inputs);
+        add_parameter(name="lambda", defval=1.0, inputs);
+
+        // SOC term in product basis (not diagonal)
+        path = "../PyrochloreIrdidate/ModelParameters/product_basis/";
+        cc.create(4);
+        expr_mat.resize(6,6);
+        expr_mat.getfromtxt(path+"soc_matrix.txt");
+        cc.add_type(0,expr_mat);
+        cc.add_type(1,expr_mat);
+        cc.add_type(2,expr_mat);
+        cc.add_type(3,expr_mat);
+        add_siteterm(name="onsite", cc, op::ni_up());
+
+        // bond operators
+        path = "../PyrochloreIrdidate/ModelParameters/product_basis/";
+        cc.create(9);
+        expr_mat.resize(6,6);
+        expr_mat.getfromtxt(path+"hopping_intracell_01.txt");
+        cc.add_type(0, expr_mat);
+        expr_mat.getfromtxt(path+"hopping_intracell_02.txt");
+        cc.add_type(1, expr_mat);
+        expr_mat.getfromtxt(path+"hopping_intracell_03.txt");
+        cc.add_type(2, expr_mat);
+        expr_mat.getfromtxt(path+"hopping_intracell_12.txt");
+        cc.add_type(3, expr_mat);
+        expr_mat.getfromtxt(path+"hopping_intracell_13.txt");
+        cc.add_type(4, expr_mat);
+        expr_mat.getfromtxt(path+"hopping_intracell_23.txt");
+        cc.add_type(5, expr_mat);
+
+        expr_mat.getfromtxt(path+"hopping_intercell_10.txt");
+        cc.add_type(6, expr_mat);
+        expr_mat.getfromtxt(path+"hopping_intercell_20.txt");
+        cc.add_type(7, expr_mat);
+        expr_mat.getfromtxt(path+"hopping_intercell_30.txt");
+        cc.add_type(8, expr_mat);
+        add_bondterm(name="hopping", cc, op::upspin_hop());
+        break;
       default:
         throw std::range_error("*error: modellibrary: model not defined for the lattice"); 
     }

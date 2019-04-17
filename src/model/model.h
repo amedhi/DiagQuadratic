@@ -23,7 +23,7 @@
 namespace model {
 
 enum class model_id {
-  UNDEFINED, HUBBARD, TJ, DISORDERED_TJ, TBI_HUBBARD
+  UNDEFINED, HUBBARD, TJ, DISORDERED_TJ, TBI_HUBBARD, PYROCHLORE
 };
 
 class Hamiltonian 

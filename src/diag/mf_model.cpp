@@ -265,18 +265,41 @@ void UnitcellTerm::build_siteterm(const model::HamiltonianTerm& hamterm,
     // expression
     strMatrix expr_mat = hamterm.coupling_expr(stype);
     ComplexMatrix coeff_mat = hamterm.coupling(stype);
-    if ((expr_mat.rows()!=1) && (expr_mat.cols()!=graph.site_dim(i))) {
+    int rows = graph.site_dim(i);
+    int cols = graph.site_dim(i);
+    if (expr_mat.cols()!=cols) {
       throw std::runtime_error("Dimension mismatch in the 'siteterm'");
     }
-    for (int j=0; j<graph.site_dim(i); ++j) {
-      unsigned n = graph.lattice().basis_index_number(i, j);
-      coeff_matrices_[0](n,n) = coeff_mat(0,j);
-      std::string cc_expr(expr_mat(0,j));
-      boost::trim(cc_expr);
-      if (cc_expr.size()>0) {
-        expr_matrices_[0](n,n) += "+("+cc_expr+")";
+    // diagonal site term
+    if (expr_mat.rows()==1) {
+      for (int j=0; j<cols; ++j) {
+        int n = graph.lattice().basis_index_number(i,j);
+        coeff_matrices_[0](n,n) = coeff_mat(0,j);
+        std::string cc_expr(expr_mat(0,j));
+        boost::trim(cc_expr);
+        if (cc_expr.size()>0) {
+          expr_matrices_[0](n,n) += "+("+cc_expr+")";
+        }
+        //n++;
       }
-      n++;
+    }
+    else {
+      // off-diagonal site term
+      if (expr_mat.rows()!=rows) {
+        throw std::runtime_error("Dimension mismatch in the 'siteterm'");
+      }
+      for (int m=0; m<rows; ++m) {
+        for (int n=0; n<cols; ++n) {
+          int p = graph.lattice().basis_index_number(i,m);
+          int q = graph.lattice().basis_index_number(i,n);
+          std::string cc_expr(expr_mat(m,n));
+          if (cc_expr.size()>0) {
+            expr_matrices_[0](p,q) += "+("+cc_expr+")";
+          }
+          // values
+          coeff_matrices_[0](p,q) += coeff_mat(m,n);
+        }
+      }
     }
   }
   bond_vectors_[0] = Vector3d(0.0,0.0,0.0);
