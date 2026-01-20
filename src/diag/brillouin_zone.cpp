@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2026-01-12 20:40:43
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-18 23:24:12
+* Last Modified time: 2026-01-19 16:07:24
 *----------------------------------------------------------------------------*/
 #include "brillouin_zone.h"
 

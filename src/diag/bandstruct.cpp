@@ -3,24 +3,18 @@
 * All rights reserved.
 * Date:   2025-12-09 17:26:56
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-18 23:10:55
+* Last Modified time: 2026-01-19 22:15:22
 *----------------------------------------------------------------------------*/
 #include <boost/algorithm/string.hpp>
 #include "./bandstruct.h"
 
 namespace diag {
 
-void BandStruct::setup(const input::Parameters& inputs, const lattice::Lattice& lattice, 
-  const kSpace& kspace, const Hamiltonian& ham)
+void BandStruct::setup(const input::Parameters& inputs, const lattice::Lattice& lattice,
+  kSpace& kspace)
 {
   MC_Observable::switch_on();
   if (setup_done_) return;
-
-  // setup k-points along symmetry path
-  num_bands_ = ham.dimension();
-  symm_kpoints_.clear();
-  symm_pidx_.clear();
-  symm_pname_.clear();
 
   // spin sector
   int info;
@@ -39,106 +33,23 @@ void BandStruct::setup(const input::Parameters& inputs, const lattice::Lattice& 
     throw std::range_error("error: BandStruct: invalid value for input 'spin_sector'");
   }
 
-
-  // kpoints 
+  // kpoints list 
   std::string kpath = inputs.set_value("kpath", "FULL");
   boost::to_upper(kpath);
   if (kpath=="SYMM") {
+    kspace.construct_kpath(lattice);
     kpath_ = kpath_type::SYMM;
+    kpath_nodes_ = kspace.kpath_nodes();
+    kpath_nodes_idx_ = kspace.kpath_nodes_idx();
   }
   else if (kpath=="FULL") {
+    kspace.construct_kmesh(lattice);
     kpath_ = kpath_type::FULL;
   }
   else {
     throw std::range_error("error: BandStruct: invalid value for input 'kpath'");
   }
 
-  if (kpath_==kpath_type::SYMM) {
-    int N = 100;
-    int idx = 0;
-    if (lattice.brav()==lattice::brav_id::CHAIN) {
-      kvector Gamma = kspace.FBZ().Gamma().vec();
-      kvector X = kspace.FBZ().X().vec();
-      //---------------------------------
-      symm_pidx_.push_back(idx);
-      symm_pname_.push_back("Gamma");
-      kvector step = (X-Gamma)/N;
-      for (int i=0; i<N; ++i) symm_kpoints_.push_back(Gamma+i*step);
-      //---------------------------------
-      idx += N;
-      symm_pidx_.push_back(idx);
-      symm_pname_.push_back("X");
-      step = (Gamma-X)/N;
-      for (int i=0; i<N; ++i) symm_kpoints_.push_back(X+i*step);
-      //---------------------------------
-      idx += N;
-      symm_pidx_.push_back(idx);
-      symm_pname_.push_back("Gamma");
-      symm_kpoints_.push_back(Gamma);
-    }
-
-    else if (lattice.brav()==lattice::brav_id::SQUARE) {
-      kvector Gamma = kspace.FBZ().Gamma().vec();
-      kvector X = kspace.FBZ().X().vec();
-      kvector M = kspace.FBZ().M().vec();
-      //---------------------------------
-      symm_pidx_.push_back(idx);
-      symm_pname_.push_back("Gamma");
-      kvector step = (X-Gamma)/N;
-      for (int i=0; i<N; ++i) symm_kpoints_.push_back(Gamma+i*step);
-      //---------------------------------
-      idx += N;
-      symm_pidx_.push_back(idx);
-      symm_pname_.push_back("X");
-      step = (M-X)/N;
-      for (int i=0; i<N; ++i) symm_kpoints_.push_back(X+i*step);
-      //---------------------------------
-      idx += N;
-      symm_pidx_.push_back(idx);
-      symm_pname_.push_back("M");
-      step = (Gamma-M)/N;
-      for (int i=0; i<N; ++i) symm_kpoints_.push_back(M+i*step);
-      //---------------------------------
-      idx += N;
-      symm_pidx_.push_back(idx);
-      symm_pname_.push_back("Gamma");
-      symm_kpoints_.push_back(Gamma);
-    }
-
-    else if (lattice.brav()==lattice::brav_id::HEXAGONAL) {
-      kvector Gamma = kspace.FBZ().Gamma().vec();
-      kvector M = kspace.FBZ().M().vec();
-      kvector K = kspace.FBZ().K().vec();
-      //---------------------------------
-      symm_pidx_.push_back(idx);
-      symm_pname_.push_back("Gamma");
-      kvector step = (M-Gamma)/N;
-      for (int i=0; i<N; ++i) symm_kpoints_.push_back(Gamma+i*step);
-      //---------------------------------
-      idx += N;
-      symm_pidx_.push_back(idx);
-      symm_pname_.push_back("M");
-      step = (K-M)/N;
-      for (int i=0; i<N; ++i) symm_kpoints_.push_back(M+i*step);
-      //---------------------------------
-      idx += N;
-      symm_pidx_.push_back(idx);
-      symm_pname_.push_back("K");
-      step = (Gamma-K)/N;
-      for (int i=0; i<N; ++i) symm_kpoints_.push_back(K+i*step);
-      //---------------------------------
-      idx += N;
-      symm_pidx_.push_back(idx);
-      symm_pname_.push_back("Gamma");
-      symm_kpoints_.push_back(Gamma);
-    }
-
-    else {
-      throw std::range_error("error: BandStruct: not implemented for this lattice");
-    }
-  }
-
-  //E_kn_.resize(symm_kpoints_.size(),num_bands_);
   this->resize(1); // not used, actually
   setup_done_ = true;
   computation_done_ = false;
@@ -152,10 +63,11 @@ void BandStruct::reset(void)
 void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
 {
   if (computation_done_) return;
+  int num_bands=ham.dimension();
 
   // header information
   if (!is_on()) {
-    std::cout << " >>warning: BandStruct::compute:: observable not 'switch on'\n";
+    std::cout << " >>warning: BandStruct::compute:: observable not 'switched on'\n";
     return; 
   } 
   if (!is_open()) open_file();
@@ -170,14 +82,14 @@ void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
     fs_ << std::endl;
   }*/
   if (spin_sector_==spin::UP) {
-    fs_ << "# bands: {spin=UP, n=[0:"<<(num_bands_-1)<<"], cols=[5:"<<(5+num_bands_-1)<<"]}\n";
+    fs_ << "# bands: {spin=UP, n=[0:"<<(num_bands-1)<<"], cols=[5:"<<(5+num_bands-1)<<"]}\n";
   }
   if (spin_sector_==spin::DN) {
-    fs_ << "# bands: {spin=DN, n=[0:"<<(num_bands_-1)<<"], cols=[5:"<<(5+num_bands_-1)<<"]}\n";
+    fs_ << "# bands: {spin=DN, n=[0:"<<(num_bands-1)<<"], cols=[5:"<<(5+num_bands-1)<<"]}\n";
   }
   if (spin_sector_==spin::BOTH) {
-    fs_ << "# bands: {spin=UP, n=[0:"<<(num_bands_-1)<<"], cols=[5:"<<(5+num_bands_-1)<<"]}; ";
-    fs_ << "{spin=DN, n=["<<num_bands_<<":"<<(2*num_bands_-1)<<"], cols=["<<5+num_bands_<<":"<<(5+2*num_bands_-1)<<"]}\n";
+    fs_ << "# bands: {spin=UP, n=[0:"<<(num_bands-1)<<"], cols=[5:"<<(5+num_bands-1)<<"]}; ";
+    fs_ << "{spin=DN, n=[0:"<<(num_bands-1)<<"], cols=["<<5+num_bands<<":"<<(5+2*num_bands-1)<<"]}\n";
   }
 
   fs_ << "#" << std::string(72, '-') << "\n";
@@ -185,20 +97,20 @@ void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
   fs_ << std::left;
   fs_ << std::setw(6)<<"k"<<std::setw(14)<<"kx"<<std::setw(14)<<"ky"<<std::setw(14)<<"kz";
   if (spin_sector_==spin::UP) {
-    for (int n=0; n<num_bands_; ++n) {
+    for (int n=0; n<num_bands; ++n) {
       fs_<<std::setw(14)<<"ek_"+std::to_string(n)+"_0"; 
     }
   }
   if (spin_sector_==spin::DN) {
-    for (int n=0; n<num_bands_; ++n) {
+    for (int n=0; n<num_bands; ++n) {
       fs_<<std::setw(14)<<"ek_"+std::to_string(n)+"_1"; 
     }
   }
   if (spin_sector_==spin::BOTH) {
-    for (int n=0; n<num_bands_; ++n) {
+    for (int n=0; n<num_bands; ++n) {
       fs_<<std::setw(14)<<"ek_"+std::to_string(n)+"_0"; 
     }
-    for (int n=0; n<num_bands_; ++n) {
+    for (int n=0; n<num_bands; ++n) {
       fs_<<std::setw(14)<<"ek_"+std::to_string(n)+"_1"; 
     }
   }
@@ -215,14 +127,14 @@ void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
     fs_ << std::right;
     // only UP-spin sector
     if (spin_sector_==spin::UP) {
-      for (int k=0; k<symm_kpoints_.size(); ++k) {
-        Vector3d kvec = symm_kpoints_[k];
+      int kidx = 0;
+      for (const auto& kvec : kspace.kpath()) {
         ham.construct_upspin_block(kvec);
         es.compute(ham.upspin_block(), Eigen::EigenvaluesOnly);
         auto e_kn = es.eigenvalues().transpose();
-        fs_<<std::setw(6) << k; 
+        fs_<<std::setw(6) << kidx++; 
         fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
-        for (int n=0; n<num_bands_; ++n) {
+        for (int n=0; n<num_bands; ++n) {
           fs_<<std::setw(14)<<e_kn(n); 
         }
         fs_ << std::endl; 
@@ -230,14 +142,14 @@ void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
     }
     // only DN-spin sector
     if (spin_sector_==spin::DN) {
-      for (int k=0; k<symm_kpoints_.size(); ++k) {
-        Vector3d kvec = symm_kpoints_[k];
+      int kidx = 0;
+      for (const auto& kvec : kspace.kpath()) {
         ham.construct_dnspin_block(kvec);
         es.compute(ham.dnspin_block(), Eigen::EigenvaluesOnly);
         auto e_kn = es.eigenvalues().transpose();
-        fs_<<std::setw(6) << k; 
+        fs_<<std::setw(6) << kidx++; 
         fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
-        for (int n=0; n<num_bands_; ++n) {
+        for (int n=0; n<num_bands; ++n) {
           fs_<<std::setw(14)<<e_kn(n); 
         }
         fs_ << std::endl; 
@@ -245,19 +157,19 @@ void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
     }
     // BOTH-spin sectors
     if (spin_sector_==spin::BOTH) {
-      for (int k=0; k<symm_kpoints_.size(); ++k) {
-        Vector3d kvec = symm_kpoints_[k];
-        fs_<<std::setw(6) << k; 
+      int kidx = 0;
+      for (const auto& kvec : kspace.kpath()) {
+        fs_<<std::setw(6) << kidx++; 
         fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
         ham.construct_kblock(kvec);
         es.compute(ham.upspin_block(), Eigen::EigenvaluesOnly);
         RealVector e_kn = es.eigenvalues().transpose();
-        for (int n=0; n<num_bands_; ++n) {
+        for (int n=0; n<num_bands; ++n) {
           fs_<<std::setw(14)<<e_kn(n); 
         }
         es.compute(ham.dnspin_block(), Eigen::EigenvaluesOnly);
         e_kn = es.eigenvalues().transpose();
-        for (int n=0; n<num_bands_; ++n) {
+        for (int n=0; n<num_bands; ++n) {
           fs_<<std::setw(14)<<e_kn(n); 
         }
         fs_ << std::endl; 
@@ -273,14 +185,14 @@ void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
     fs_ << std::right;
     // only UP-spin sector
     if (spin_sector_==spin::UP) {
-      for (int k=0; k<kspace.num_kpoints(); ++k) {
-        Vector3d kvec = kspace.kpoint(k);
+      int kidx = 0;
+      for (const auto& kvec : kspace.kmesh()) {
         ham.construct_upspin_block(kvec);
         es.compute(ham.upspin_block(), Eigen::EigenvaluesOnly);
         auto e_kn = es.eigenvalues().transpose();
-        fs_<<std::setw(6) << k; 
+        fs_<<std::setw(6) << kidx++; 
         fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
-        for (int n=0; n<num_bands_; ++n) {
+        for (int n=0; n<num_bands; ++n) {
           fs_<<std::setw(14)<<e_kn(n); 
         }
         fs_ << std::endl; 
@@ -288,14 +200,14 @@ void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
     }
     // only DN-spin sector
     if (spin_sector_==spin::DN) {
-      for (int k=0; k<kspace.num_kpoints(); ++k) {
-        Vector3d kvec = kspace.kpoint(k);
+      int kidx = 0;
+      for (const auto& kvec : kspace.kmesh()) {
         ham.construct_dnspin_block(kvec);
         es.compute(ham.dnspin_block(), Eigen::EigenvaluesOnly);
         auto e_kn = es.eigenvalues().transpose();
-        fs_<<std::setw(6) << k; 
+        fs_<<std::setw(6) << kidx++; 
         fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
-        for (int n=0; n<num_bands_; ++n) {
+        for (int n=0; n<num_bands; ++n) {
           fs_<<std::setw(14)<<e_kn(n); 
         }
         fs_ << std::endl; 
@@ -303,19 +215,19 @@ void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
     }
     // BOTH-spin sectors
     if (spin_sector_==spin::BOTH) {
-      for (int k=0; k<kspace.num_kpoints(); ++k) {
-        Vector3d kvec = kspace.kpoint(k);
-        fs_<<std::setw(6) << k; 
+      int kidx = 0;
+      for (const auto& kvec : kspace.kmesh()) {
+        fs_<<std::setw(6) << kidx++; 
         fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
         ham.construct_kblock(kvec);
         es.compute(ham.upspin_block(), Eigen::EigenvaluesOnly);
         RealVector e_kn = es.eigenvalues().transpose();
-        for (int n=0; n<num_bands_; ++n) {
+        for (int n=0; n<num_bands; ++n) {
           fs_<<std::setw(14)<<e_kn(n); 
         }
         es.compute(ham.dnspin_block(), Eigen::EigenvaluesOnly);
         e_kn = es.eigenvalues().transpose();
-        for (int n=0; n<num_bands_; ++n) {
+        for (int n=0; n<num_bands; ++n) {
           fs_<<std::setw(14)<<e_kn(n); 
         }
         fs_ << std::endl; 
@@ -339,15 +251,17 @@ void BandStruct::print_heading(const std::string& header,
   fs_ << header;
   fs_ << "# Results: " << name() << "\n";
   fs_ << "#" << std::string(72, '-') << "\n";
-  fs_ << "# Special k-points:\n";
-  fs_ << "# ";
-  fs_ << std::right;
-  for (const auto& name : symm_pname_) fs_<<std::setw(8)<<name; 
-  fs_ << std::endl;
-  fs_ << "# ";
-  for (const auto& idx : symm_pidx_) fs_<<std::setw(8)<<idx; 
-  fs_ << std::endl;
-  fs_ << "#" << std::string(72, '-') << "\n";
+  if (kpath_==kpath_type::SYMM) {
+    fs_ << "# Special k-points:\n";
+    fs_ << "# ";
+    fs_ << std::right;
+    for (const auto& G : kpath_nodes_) fs_<<std::setw(8)<<G.name(); 
+    fs_ << std::endl;
+    fs_ << "# ";
+    for (const auto& idx : kpath_nodes_idx_) fs_<<std::setw(8)<<idx; 
+    fs_ << std::endl;
+    fs_ << "#" << std::string(72, '-') << "\n";
+  }
 
   fs_ << std::flush;
   heading_printed_ = true;

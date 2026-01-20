@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-09 17:07:45
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-16 15:40:30
+* Last Modified time: 2026-01-20 10:26:43
 *----------------------------------------------------------------------------*/
 #ifndef MC_OBSERVABLES_H
 #define MC_OBSERVABLES_H
@@ -15,6 +15,7 @@
 #include "../lattice/lattice.h"
 #include "../model/model.h"
 #include "./bandstruct.h"
+#include "./wavefunction.h"
 
 namespace diag {
 
@@ -28,7 +29,7 @@ public:
   //  void (&print_copyright)(std::ostream& os), const lattice::Lattice& lattice, 
   //  const model::Hamiltonian& model, const SysConfig& config);
   void init(const input::Parameters& inputs, const lattice::Lattice& lattice, 
-    const kSpace& kspace, const Hamiltonian& ham, const std::string& prefix);
+    kSpace& kspace, const Hamiltonian& ham, const std::string& prefix);
   void as_functions_of(const std::vector<std::string>& xvars=std::vector<std::string>());
   void as_functions_of(const std::string& xvar);
   void switch_off(void);
@@ -41,6 +42,7 @@ public:
   void save_results(void); 
   void avg_grand_data(void); 
   const BandStruct& band_struct(void) const { return band_struct_; }
+  const WaveFunction& wave_function(void) const { return wave_function_; }
   void finalize(void);
   void print_heading(void);
   void print_results(const std::vector<double>& xvals=std::vector<double>()); 
@@ -55,6 +57,7 @@ private:
   std::vector<std::string> xvars_;
   int num_xvars_{0};
   BandStruct band_struct_; 
+  WaveFunction wave_function_; 
 };
 
 

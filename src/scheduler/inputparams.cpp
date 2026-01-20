@@ -4,8 +4,8 @@
 * Copyright (C) 2015-2015 by Amal Medhi <amedhi@iisertvm.ac.in>.
 * All rights reserved.
 * Date:   2015-08-17 13:33:19
-* Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-04-19 22:37:02
+* Last Modified by:   Amal Medhi
+* Last Modified time: 2026-01-19 22:11:48
 *----------------------------------------------------------------------------*/
 // File: inputparams.cc
 
@@ -146,7 +146,7 @@ unsigned int JobInput::parse(const std::string& inputfile)
   using key_boov_pair = std::pair<const std::string, std::vector<bool> >;
   using key_numv_pair = std::pair<const std::string, std::vector<double> >;
   using key_strv_pair = std::pair<const std::string, std::vector<std::string> >;
-
+  
   while (std::getline(fin,line)) {
     line_no++;
     // skip comments & blank lines
@@ -172,9 +172,15 @@ unsigned int JobInput::parse(const std::string& inputfile)
       boost::trim(line);
     }
 
-    // ',' separated range value
-    if (line.find(",") != std::string::npos) {
+    /* ',' separated range value 
+      String can contain ',' character. In case of string, it will be
+      parsed in the next step.
+    */
+    bool not_string = true;
+    if (line.front()=='\"'&&line.back()=='\"') not_string = false;
+    if (not_string && line.find(",")!=std::string::npos) {
       boost::trim(line);
+
       n = std::count(line.begin(), line.end(), ',');
       if (n!=2 || line.front()==',' || line.back()==',')
         throw bad_input("invalid range assignment syntax", line_no);

@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-06 11:29:29
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-17 14:08:51
+* Last Modified time: 2026-01-20 11:26:04
 *----------------------------------------------------------------------------*/
 #ifndef LATTICE_H
 #define LATTICE_H
@@ -34,7 +34,7 @@ OBLIQUE, CUBIC, CUBIC_BCC, CUBIC_FCC
 /*---------------lattice types-----------------*/
 enum class lattice_id {
   UNDEFINED, SQUARE, SQUARE_NNN, SQUARE_2BAND, SQUARE_2SITE, SQUARE_4SITE, CHAIN, CHAIN_2SITE,
-  HONEYCOMB, SW_GRAPHENE, SIMPLECUBIC, NICKELATE_2B, NICKELATE_2D, NICKELATE_2L,
+  HONEYCOMB, HONEYCOMB2, SW_GRAPHENE, SIMPLECUBIC, NICKELATE_2B, NICKELATE_2D, NICKELATE_2L,
   NICKELATE_4SITE, SQUARE_CDW4, SQUARE_STRIPE
 };
 

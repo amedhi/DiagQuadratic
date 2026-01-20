@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2026-01-12 20:40:07
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-16 16:16:38
+* Last Modified time: 2026-01-19 16:07:21
 *----------------------------------------------------------------------------*/
 #ifndef BRILLOUIN_ZONE_H
 #define BRILLOUIN_ZONE_H
@@ -18,6 +18,7 @@
 namespace diag {
 
 using kvector = Vector3d;
+
 class special_Kpoint
 {
 public:

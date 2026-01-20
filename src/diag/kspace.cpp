@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-10 19:13:42
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-17 15:58:13
+* Last Modified time: 2026-01-19 16:29:47
 *----------------------------------------------------------------------------*/
 //#include <iomanip>
 #include "kspace.h"
@@ -12,16 +12,12 @@ namespace diag {
 
 kSpace::kSpace(const lattice::Lattice& lattice) 
 {
-  construct(lattice);
+  init(lattice);
+  kmesh_constructed_ = false;
+  kpath_constructed_ = false;
 }
 
-int kSpace::construct(const lattice::Lattice& lattice)
-{
-  make_kpoints(lattice);
-  return 0;
-}
-
-void kSpace::make_kpoints(const lattice::Lattice& lattice)
+int kSpace::init(const lattice::Lattice& lattice)
 {
   Vector3d a1, a2, a3, n1, n2, n3;
   double v;
@@ -40,7 +36,7 @@ void kSpace::make_kpoints(const lattice::Lattice& lattice)
   std::cout << "a3= " << a3.transpose() << "\n";
   */
 
-  unsigned symmetry_type = 0;
+  int symmetry_type = 0;
   if (lattice.bc1() == bc::periodic) {
     b1_ = two_pi() * a1 / a1.dot(a1); 
     symmetry_type = symmetry_type + 1;
@@ -94,35 +90,39 @@ void kSpace::make_kpoints(const lattice::Lattice& lattice)
   std::cout << "b3= " << b3_.transpose() << "\n";
   */
 
-  // antiperiodic boundary condition
-  //Vector3d antipb_shift(0.0, 0.0, 0.0);
-  //if (lattice.bc1_periodicity()==bc::antiperiodic) antipb_shift(0) = 0.5/lattice.size1();
-  //if (lattice.bc2_periodicity()==bc::antiperiodic) antipb_shift(1) = 0.5/lattice.size2();
-  //if (lattice.bc3_periodicity()==bc::antiperiodic) antipb_shift(2) = 0.5/lattice.size3();
+  // Construct First Brillouin Zone
+  FBZ_.construct(lattice,b1_,b2_,b3_);
 
-  // twisted bc shift
-  Vector3d antipb_shift(0.0,0.0,0.0);
-  antipb_shift(0) = lattice.bc1_twist()/(two_pi()*lattice.size1());
-  antipb_shift(1) = lattice.bc2_twist()/(two_pi()*lattice.size2());
-  antipb_shift(2) = lattice.bc3_twist()/(two_pi()*lattice.size3());
-  //std::cout << "k-shift = " << antipb_shift.transpose() << "\n";
+  return 0;
+}
+
+int kSpace::construct_kmesh(const lattice::Lattice& lattice)
+{
+  if (kmesh_constructed_) return 0;
+
+  // Shifts in k-points due to 'twists in BCs'
+  kvector bc_shift(0.0,0.0,0.0);
+  bc_shift(0) = lattice.bc1_twist()/(two_pi()*lattice.size1());
+  bc_shift(1) = lattice.bc2_twist()/(two_pi()*lattice.size2());
+  bc_shift(2) = lattice.bc3_twist()/(two_pi()*lattice.size3());
+  //std::cout << "k-shift = " << twist_shift.transpose() << "\n";
 
   // Generate the k-points 
   double x1, x2, x3;
   Vector3i n = {0,0,0};
   Vector3i m = {-lattice.size1()/2, -lattice.size2()/2, -lattice.size3()/2};
-  // special of 'HONEYCOMB' lattice Ribbon Goemetry
+  // Special for 'HONEYCOMB' lattice Ribbon Goemetry
   if (lattice.id()==lattice::lattice_id::HONEYCOMB && lattice.dimension()==1) {
     m = {0,0,0};
   }
 
   num_kpoints_ = lattice.num_unitcells();
-  kpoints_.resize(num_kpoints_);
+  kmesh_.resize(num_kpoints_);
   for (int i=0; i<num_kpoints_; i++) {
-    x1 = static_cast<double>(m(0)+n(0))/lattice.size1() + antipb_shift(0);
-    x2 = static_cast<double>(m(1)+n(1))/lattice.size2() + antipb_shift(1);
-    x3 = static_cast<double>(m(2)+n(2))/lattice.size3() + antipb_shift(2);
-    kpoints_[i] = x1*b1_ + x2*b2_ + x3*b3_;
+    x1 = static_cast<double>(m(0)+n(0))/lattice.size1() + bc_shift(0);
+    x2 = static_cast<double>(m(1)+n(1))/lattice.size2() + bc_shift(1);
+    x3 = static_cast<double>(m(2)+n(2))/lattice.size3() + bc_shift(2);
+    kmesh_[i] = x1*b1_ + x2*b2_ + x3*b3_;
     /*
     auto kvec = x1 * b1 + x2 * b2 + x3 * b3;
     std::cout << i << ": " << kvec.transpose() << "\n";
@@ -132,10 +132,6 @@ void kSpace::make_kpoints(const lattice::Lattice& lattice)
     n = lattice.get_next_bravindex(n);
   }
 
-  // Construct First Brillouin Zone
-  FBZ_.construct(lattice,b1_,b2_,b3_);
-
-
   /*
    The k-points may not lie inside FBZ for certain Bravais lattices.
    For those lattices, construct the FBZ explicitly and translate the
@@ -143,7 +139,7 @@ void kSpace::make_kpoints(const lattice::Lattice& lattice)
   */
   if (lattice.brav()==lattice::brav_id::HEXAGONAL) {
     // translate of the k-points outsize FBZ
-    for (auto& kvec : kpoints_) {
+    for (auto& kvec : kmesh_) {
       /*
        Check if the point lies within the half-spaces. If not, shift
        it by the corresponding '-G' vector. 
@@ -159,8 +155,6 @@ void kSpace::make_kpoints(const lattice::Lattice& lattice)
       }
     }
   }
-
-
   /*
   int i=0;
   for (const auto& kvec : kpoints_) {
@@ -169,7 +163,68 @@ void kSpace::make_kpoints(const lattice::Lattice& lattice)
   std::cout << "Exiting at kspace.cpp\n";
   std::exit(0);
   */
+
+  kmesh_constructed_ = true;
+  return 0;
 }
 
+//=====================================================================
+int BrillouinZone::construct(const lattice::Lattice& lattice, 
+  const Vector3d& b1, const Vector3d& b2, const Vector3d& b3)
+{
+  /* 
+   Take a few reciprocal lattice points (G-points) near the origin.
+   A half-space wrt to G-point is a tuple (G, ncap, d), where 
+   'G' is a reciprocal lattice point, 'ncap' is a unit vector along G
+   and 'd' is the distance from the origin to the perpendicular
+   bisector of the line joining origin to G.
+  */
+  half_spaces_.clear();
+  // 1D lattices
+  if (lattice.dimension() == 1) {
+    std::list<int> idx = {1,-1};
+    for (const auto& i : idx) {
+      kvector G = i*b1;
+      double norm = G.norm();
+      kvector ncap = G/norm;
+      double d = 0.5*norm;
+      half_spaces_.push_back({G,ncap,d});
+    }
+  }
+
+  // 2D lattices
+  if (lattice.dimension() == 2) {
+    std::list<int> idx = {2,1,0,-1,-2};
+    for (const auto& i : idx) {
+      for (const auto& j : idx) {
+        if (i==0 && j==0) continue;
+        kvector G = i*b1+j*b2;
+        double norm = G.norm();
+        kvector ncap = G/norm;
+        double d = 0.5*norm;
+        half_spaces_.push_back({G,ncap,d});
+      }
+    }
+  }
+
+  // 3D lattices
+  if (lattice.dimension() == 3) {
+    std::list<int> idx = {2,1,0,-1,-2};
+    for (const auto& i : idx) {
+      for (const auto& j : idx) {
+        for (const auto& k : idx) {
+          if (i==0 && j==0 && k==0) continue;
+          kvector G = i*b1+j*b2+k*b3;
+          double norm = G.norm();
+          kvector ncap = G/norm;
+          double d = 0.5*norm;
+          half_spaces_.push_back({G,ncap,d});
+        }
+      }
+    }
+  }
+
+  return 0;
+}
 
 } // end namespace diag

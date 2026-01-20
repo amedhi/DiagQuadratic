@@ -25,9 +25,10 @@ SRCS+= model/model_term.cpp
 SRCS+= model/model.cpp
 SRCS+= model/modellibrary.cpp
 SRCS+= diag/hamiltonian.cpp
-SRCS+= diag/brillouin_zone.cpp
 SRCS+= diag/kspace.cpp
+SRCS+= diag/kspace_kpath.cpp
 SRCS+= diag/bandstruct.cpp
+SRCS+= diag/wavefunction.cpp
 SRCS+= diag/observables.cpp
 SRCS+= diag/diag.cpp
 SRCS+= main.cpp
@@ -50,10 +51,10 @@ HDRS=    scheduler/mpi_comm.h \
 	 model/quantum_op.h \
 	 model/model.h \
 	 diag/matrix.h \
-	 diag/brillouin_zone.h \
 	 diag/kspace.h \
 	 diag/hamiltonian.h \
 	 diag/bandstruct.h \
+	 diag/wavefunction.h \
 	 diag/observables.h \
 	 diag/diag.h \
 	 vmc/bandstruct.h \

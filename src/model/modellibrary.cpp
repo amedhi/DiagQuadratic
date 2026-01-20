@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-06 11:31:10
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-17 21:43:36
+* Last Modified time: 2026-01-20 15:05:41
 *----------------------------------------------------------------------------*/
 #include <cmath>
 #include "model.h"
@@ -63,6 +63,70 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
       cc.add_type(4,"-i*lambda");
       add_bondterm(name="hopping", cc, op::dnspin_hop());
     }
+    else {
+      throw std::range_error("*error: modellibrary: model not defined for this lattice");
+    }
+  }
+
+  else if (model_name == "MKM") {
+    mid = model_id::MKM;
+    if (lattice.id()==lattice::lattice_id::HONEYCOMB2) {
+      // model parameters
+      add_parameter(name="t", defval=1.0, inputs);
+      add_parameter(name="eta", defval=1.0, inputs);
+      add_parameter(name="lambda", defval=1.0, inputs);
+      add_parameter(name="lambda_R", defval=1.0, inputs);
+
+      // constants
+      double aa = 1.0;
+      double x = 0.5*std::sqrt(3.0)*aa;
+      double y = 0.5*aa;
+      add_constant(name="x", x);
+      add_constant(name="y", y);
+
+      // bond operator terms
+      cc.create(5);
+      // first NN-bond
+      expr_mat.resize(2,2);
+      expr_mat(0,0) = "-t";
+      expr_mat(0,1) = "lambda_R*(x-i*y)";
+      expr_mat(1,0) = "lambda_R*(x+i*y)";
+      expr_mat(1,1) = "-t";
+      cc.add_type(0, expr_mat); 
+
+      // second NN-bond
+      expr_mat.resize(2,2);
+      expr_mat(0,0) = "-t*eta";
+      expr_mat(0,1) = "lambda_R*(x+i*y)";
+      expr_mat(1,0) = "lambda_R*(x-i*y)";
+      expr_mat(1,1) = "-t*eta";
+      cc.add_type(1, expr_mat); 
+
+      // third NN-bond
+      expr_mat.resize(2,2);
+      expr_mat(0,0) = "-t*eta";
+      expr_mat(0,1) = "i*lambda_R";
+      expr_mat(1,0) = "-i*lambda_R";
+      expr_mat(1,1) = "-t*eta";
+      cc.add_type(2, expr_mat); 
+
+      // NNN-bonds
+      expr_mat.resize(2,2);
+      expr_mat(0,0) = "-i*lambda";
+      expr_mat(0,1) = "0.0";
+      expr_mat(1,0) = "0.0";
+      expr_mat(1,1) = "i*lambda";
+      cc.add_type(3, expr_mat); 
+
+      expr_mat.resize(2,2);
+      expr_mat(0,0) = "i*lambda";
+      expr_mat(0,1) = "0.0";
+      expr_mat(1,0) = "0.0";
+      expr_mat(1,1) = "-i*lambda";
+      cc.add_type(4, expr_mat); 
+      add_bondterm(name="hopping", cc, op::upspin_hop());
+    }
+
     else {
       throw std::range_error("*error: modellibrary: model not defined for this lattice");
     }

@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2016-01-17 21:32:15
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-17 21:40:51
+* Last Modified time: 2026-01-20 12:17:40
 *----------------------------------------------------------------------------*/
 #include <stdexcept>
 #include <iomanip>
@@ -66,7 +66,6 @@ int Lattice::define_lattice(void)
   }
 
   else if (lname=="HONEYCOMB") {
-    // type
     lid = lattice_id::HONEYCOMB;
     extent[dim3] = Extent{1, boundary_type::open, boundary_type::open, 0.0};
     ibrav = brav_id::HEXAGONAL;
@@ -98,8 +97,7 @@ int Lattice::define_lattice(void)
   }
 
   else if (lname=="HONEYCOMB2") {
-    // type
-    lid = lattice_id::HONEYCOMB;
+    lid = lattice_id::HONEYCOMB2;
     extent[dim3] = Extent{1, boundary_type::open, boundary_type::open, 0.0};
     ibrav = brav_id::HEXAGONAL;
     if (spatial_dim==0) ibrav = brav_id::ZERO;
@@ -112,13 +110,13 @@ int Lattice::define_lattice(void)
     set_basis_vectors(a1=vec(x,0,0), a2=vec(0.5*x,y,0), a3=vec(0,0,0));
 
     // add sites
-    add_basis_site(type=0, orbitals=1, coord=vec(0,0,0));
-    add_basis_site(type=1, orbitals=1, coord=vec(0,aa,0));
+    add_basis_site(type=0, orbitals=2, coord=vec(0,0,0));
+    add_basis_site(type=1, orbitals=2, coord=vec(0.5*x,0.5*aa,0));
 
     // NN bonds
     add_bond(type=0,src=0,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,0,0));
-    add_bond(type=1,src=0,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,-1,0));
-    add_bond(type=2,src=0,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(1,-1,0));
+    add_bond(type=1,src=1,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(1,0,0));
+    add_bond(type=2,src=1,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(0,1,0));
 
     // NNN bonds
     add_bond(type=3,src=0,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(1,0,0));

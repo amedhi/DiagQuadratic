@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-06 11:34:31
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2025-12-09 23:46:46
+* Last Modified time: 2026-01-19 11:29:49
 *----------------------------------------------------------------------------*/
 #ifndef MODEL_H
 #define MODEL_H
@@ -22,7 +22,7 @@
 namespace model {
 
 enum class model_id {
-  UNDEFINED, HUBBARD, KM, HUBBARD_IONIC, HUBBARD_T2G, TJ, DISORDERED_TJ, TBI_HUBBARD, 
+  UNDEFINED, HUBBARD, KM, MKM, TJ, TBI_HUBBARD, 
   PYROCHLORE, NICKELATE
 };
 

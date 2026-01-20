@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-09 17:26:41
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-18 23:23:41
+* Last Modified time: 2026-01-19 17:02:30
 *----------------------------------------------------------------------------*/
 #ifndef BANDSTURCT_H
 #define BANDSTURCT_H
@@ -19,8 +19,8 @@ class BandStruct : public mcdata::MC_Observable
 public:
   using MC_Observable::MC_Observable;
   void reset(void) override;
-  void setup(const input::Parameters& inputs, const lattice::Lattice& lattice, 
-    const kSpace& kspace, const Hamiltonian& ham);
+  void setup(const input::Parameters& inputs, const lattice::Lattice& lattice,
+    kSpace& kspace);
   void compute(const kSpace& kspace, const Hamiltonian& ham);
   void print_heading(const std::string& header, 
     const std::vector<std::string>& xvars) override;
@@ -32,10 +32,8 @@ private:
   bool setup_done_{false};
   bool computation_done_{false};
   kpath_type kpath_{SYMM};
-  int num_bands_{1};
-  std::vector<kvector> symm_kpoints_;
-  std::vector<int> symm_pidx_;
-  std::vector<std::string> symm_pname_;
+  std::vector<special_kpoint> kpath_nodes_;
+  std::vector<int> kpath_nodes_idx_;
   std::vector<std::string> xvars_;
   //Eigen::MatrixXd E_kn_;
 };
