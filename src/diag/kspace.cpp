@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-10 19:13:42
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-19 16:29:47
+* Last Modified time: 2026-01-21 12:44:12
 *----------------------------------------------------------------------------*/
 //#include <iomanip>
 #include "kspace.h"
@@ -112,8 +112,11 @@ int kSpace::construct_kmesh(const lattice::Lattice& lattice)
   Vector3i n = {0,0,0};
   Vector3i m = {-lattice.size1()/2, -lattice.size2()/2, -lattice.size3()/2};
   // Special for 'HONEYCOMB' lattice Ribbon Goemetry
-  if (lattice.id()==lattice::lattice_id::HONEYCOMB && lattice.dimension()==1) {
-    m = {0,0,0};
+  if (lattice.id()==lattice::lattice_id::HONEYCOMB ||
+    lattice.id()==lattice::lattice_id::HONEYCOMB2) {
+    if (lattice.dimension()==1) {
+      m = {0,0,0};
+    }
   }
 
   num_kpoints_ = lattice.num_unitcells();
@@ -155,9 +158,10 @@ int kSpace::construct_kmesh(const lattice::Lattice& lattice)
       }
     }
   }
+
   /*
   int i=0;
-  for (const auto& kvec : kpoints_) {
+  for (const auto& kvec : kmesh_) {
     std::cout << i++ << "  " << kvec(0) << "  " << kvec(1) << "\n";
   }
   std::cout << "Exiting at kspace.cpp\n";

@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2026-01-19 14:43:15
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-19 16:51:21
+* Last Modified time: 2026-01-21 16:42:00
 *----------------------------------------------------------------------------*/
 //#include <iomanip>
 #include "kspace.h"
@@ -84,11 +84,14 @@ int kSpace::construct_kpath(const lattice::Lattice& lattice)
 	else if (lattice.brav()==lattice::brav_id::HEXAGONAL) {
     kvector Gamma = kvector(0,0,0);
     Gamma_.set("Gamma",Gamma);
-    kvector M = 0.5*b1_;
+    //kvector M = 0.5*(b1_+b2_);
+    kvector M = 0.5*b2_;
     M_.set("M",M);
-  	kvector K = (2*b1_+b2_)/3;
+  	//kvector K = (b1_-b2_)/3;
+    kvector K = (2*b1_+b2_)/3;
     K_.set("K",K);
-  	kvector Kprime = (2*b1_-b2_)/3;
+  	//kvector Kprime = (2*b1_+b2_)/3;
+    kvector Kprime = (2*b2_+b1_)/3;
     Kprime_.set("Kprime",Kprime);
     //---------------------------------
 		kpath_nodes_.push_back(Gamma_);
@@ -99,19 +102,25 @@ int kSpace::construct_kpath(const lattice::Lattice& lattice)
     idx += N;
 		kpath_nodes_.push_back(M_);
 		kpath_nodes_idx_.push_back(idx);
-    step = (K-M)/N;
+    step = (Kprime-M)/N;
     for (int i=0; i<N; ++i) kpath_.push_back(M+i*step);
     //---------------------------------
     idx += N;
-		kpath_nodes_.push_back(K_);
+		kpath_nodes_.push_back(Kprime_);
 		kpath_nodes_idx_.push_back(idx);
-    step = (Gamma-K)/N;
-    for (int i=0; i<N; ++i) kpath_.push_back(K+i*step);
+    step = (Gamma-Kprime)/N;
+    for (int i=0; i<N; ++i) kpath_.push_back(Kprime+i*step);
     //---------------------------------
     idx += N;
 		kpath_nodes_.push_back(Gamma_);
 		kpath_nodes_idx_.push_back(idx);
-    kpath_.push_back(Gamma);
+    step = (K-Gamma)/N;
+    for (int i=0; i<N; ++i) kpath_.push_back(Gamma+i*step);
+    //---------------------------------
+    idx += N;
+    kpath_nodes_.push_back(K_);
+    kpath_nodes_idx_.push_back(idx);
+    kpath_.push_back(K);
 	}
 
 	else {
