@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-06 12:11:48
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-18 23:04:43
+* Last Modified time: 2026-01-22 11:32:07
 *----------------------------------------------------------------------------*/
 #ifndef HAMILTONIAN_H
 #define HAMILTONIAN_H
@@ -67,6 +67,8 @@ public:
   int construct_kblock(const Vector3d& kvec) const;
   int construct_pairing_part(const Vector3d& kvec) const;
   const int& dimension(void) const { return dim_; }
+  const std::vector<std::string>& basis_state_labels(void) const { return basis_state_labels_; }
+  const std::vector<Vector3d>& basis_state_coords(void) const { return basis_state_coords_; }
   const ComplexMatrix& upspin_block(void) const { return quadratic_block_up_; }
   const ComplexMatrix& dnspin_block(void) const { return quadratic_block_dn_; }
   const ComplexMatrix& pairing_block(void) const { return pairing_block_; }
@@ -77,6 +79,8 @@ private:
   int num_basis_sites_;
   // [site_idx, orbital_idx] pair to basis_idx mapping
   basis_idx_map site_orb_idx_;
+  std::vector<std::string> basis_state_labels_;
+  std::vector<Vector3d> basis_state_coords_;
   // Unitecell Ham matrices
   std::vector<UnitcellTerm> usite_terms_;
   std::vector<UnitcellTerm> ubond_terms_;

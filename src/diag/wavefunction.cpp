@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2026-01-18 23:08:54
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-20 21:30:39
+* Last Modified time: 2026-01-22 08:25:55
 *----------------------------------------------------------------------------*/
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
@@ -136,7 +136,7 @@ void WaveFunction::compute(const kSpace& kspace, const Hamiltonian& ham)
   fs_ << std::scientific << std::uppercase << std::setprecision(6);
 
   fs_ << std::left;
-  int idx = 1;
+  int idx = 0;
   for (auto it=up_states_.begin(); it!=up_states_.end();++it) {
     int k = it->first;
     auto n_set = it->second;
@@ -145,7 +145,7 @@ void WaveFunction::compute(const kSpace& kspace, const Hamiltonian& ham)
       fs_ << "# ";
       fs_ << std::setw(8)<<"wf_"+std::to_string(idx)+":";
       fs_ << std::setw(20) << "psi("+std::to_string(k)+","+std::to_string(n)+",0)";
-      fs_ << std::setw(10) << "cols: ("+std::to_string(1+idx)+","+std::to_string(2+idx)+")";
+      fs_ << std::setw(10) << "cols: ("+std::to_string(6+2*idx)+","+std::to_string(6+2*idx+1)+")";
       fs_ << std::endl;
       idx++;
     }
@@ -174,7 +174,11 @@ void WaveFunction::compute(const kSpace& kspace, const Hamiltonian& ham)
   fs_ << "#" << std::string(72, '-') << "\n";
   fs_ << "# ";
   fs_ << std::left;
-  fs_ << std::setw(6)<<"alpha";
+  fs_ << std::setw(8)<<"basis";
+  fs_ << std::setw(8)<<"label";
+  fs_ << std::setw(14)<<"xcoord";
+  fs_ << std::setw(14)<<"ycoord";
+  fs_ << std::setw(14)<<"zcoord";
   idx = 1;
   for (auto it=up_states_.begin(); it!=up_states_.end();++it) {
     auto n_set = it->second;
@@ -299,7 +303,10 @@ void WaveFunction::compute(const kSpace& kspace, const Hamiltonian& ham)
   // Print the wave functions
   fs_ << std::right;
   for (int i=0; i<num_bands; ++i) {
-    fs_<<std::setw(6) << i; 
+    fs_<<std::setw(8) << i; 
+    fs_<<std::setw(8) << ham.basis_state_labels()[i]; 
+    auto R = ham.basis_state_coords()[i];
+    fs_<<std::setw(14)<<R(0)<<std::setw(14)<<R(1)<<std::setw(14)<<R(2); 
     for (int j=0; j<num_states_; ++j) {
       fs_<<std::setw(14)<<std::real(Psi(i,j)); 
       fs_<<std::setw(14)<<std::imag(Psi(i,j)); 

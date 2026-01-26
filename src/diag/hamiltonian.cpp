@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-06 12:15:35
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-18 23:04:38
+* Last Modified time: 2026-01-22 11:32:04
 *----------------------------------------------------------------------------*/
 #include "./hamiltonian.h"
 #include <boost/algorithm/string.hpp>
@@ -43,6 +43,20 @@ int Hamiltonian::init_ham(const lattice::Lattice& lattice)
   for (int i=0; i<num_basis_sites_; ++i) {
     for (int m=0; m<lattice.site(i).num_orbitals(); ++m) {
       site_orb_idx_[i].push_back(idx++);
+    }
+  }
+  assert(dim_==idx);
+
+  // labels and 'site' coordinates of the basis states
+  basis_state_labels_.resize(dim_);
+  basis_state_coords_.resize(dim_);
+  idx = 0;
+  for (int i=0; i<num_basis_sites_; ++i) {
+    std::string str = std::to_string(i);
+    for (int m=0; m<lattice.site(i).num_orbitals(); ++m) {
+      basis_state_labels_[idx] = str+"-"+std::to_string(m); 
+      basis_state_coords_[idx] = lattice.site(i).coord();
+      idx++;
     }
   }
 
