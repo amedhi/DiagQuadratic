@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-06 11:29:29
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-20 11:26:04
+* Last Modified time: 2026-03-22 12:54:36
 *----------------------------------------------------------------------------*/
 #ifndef LATTICE_H
 #define LATTICE_H
@@ -34,7 +34,7 @@ OBLIQUE, CUBIC, CUBIC_BCC, CUBIC_FCC
 /*---------------lattice types-----------------*/
 enum class lattice_id {
   UNDEFINED, SQUARE, SQUARE_NNN, SQUARE_2BAND, SQUARE_2SITE, SQUARE_4SITE, CHAIN, CHAIN_2SITE,
-  HONEYCOMB, HONEYCOMB2, SW_GRAPHENE, SIMPLECUBIC, NICKELATE_2B, NICKELATE_2D, NICKELATE_2L,
+  HONEYCOMB, HONEYCOMB2, HONEYCOMB3, SW_GRAPHENE, SIMPLECUBIC, NICKELATE_2B, NICKELATE_2D, NICKELATE_2L,
   NICKELATE_4SITE, SQUARE_CDW4, SQUARE_STRIPE
 };
 
@@ -55,6 +55,7 @@ public:
   ~Site() {}
   // setter functions
   static void reset_count(void) { num_site=0; }
+  void reset_id(const int& id) { id_= id; }
   void reset_type(const int& t) { type_=t; }
   void reset_uid(const int& uid) { uid_=uid; }
   void reset_bravindex(const Vector3i& idx) { bravindex_=idx; }
@@ -140,9 +141,9 @@ public:
   friend std::ostream& operator<<(std::ostream& os, const Bond& bond);
 private:
   static int num_bond;
-  int id_ {0};
-  int type_ {0};
-  int ngb_ {0};
+  int id_{0};
+  int type_{0};
+  int ngb_{0};
   int vector_id_{0}; // integer id for the following vector
   Vector3d vector_{Vector3d(0,0,0)}; // coordinate of 'tgt cell' wrt 'src cell'
   //int src_ {0}; 
@@ -369,6 +370,7 @@ private:
   int finalize_lattice(void); 
   int symmetrize_lattice(void);
   int construct_graph(void); 
+  int print_lattice(void); 
   boundary_type boundary_condition(std::string& bc) const;
   Eigen::Matrix3d rotation_matrix(const Eigen::Vector3d& r, const Eigen::Vector3d& r_prime);
 };

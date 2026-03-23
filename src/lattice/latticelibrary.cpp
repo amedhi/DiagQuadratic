@@ -3,11 +3,12 @@
 * All rights reserved.
 * Date:   2016-01-17 21:32:15
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-20 12:17:40
+* Last Modified time: 2026-03-23 21:43:34
 *----------------------------------------------------------------------------*/
 #include <stdexcept>
 #include <iomanip>
 #include <boost/algorithm/string.hpp>
+#include <fstream>
 #include "lattice.h"
 //#include "graph.h"
 
@@ -114,17 +115,52 @@ int Lattice::define_lattice(void)
     add_basis_site(type=1, orbitals=2, coord=vec(0.5*x,0.5*aa,0));
 
     // NN bonds
-    add_bond(type=0,src=0,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,0,0));
-    add_bond(type=1,src=1,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(1,0,0));
-    add_bond(type=2,src=1,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(0,1,0));
+    int ngb;
+    add_bond(type=0,ngb=1,src=0,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,0,0));
+    add_bond(type=1,ngb=1,src=1,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(1,0,0));
+    add_bond(type=2,ngb=1,src=1,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(0,1,0));
 
     // NNN bonds
-    add_bond(type=3,src=0,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(1,0,0));
-    add_bond(type=4,src=0,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(0,1,0));
-    add_bond(type=3,src=0,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(-1,1,0));
-    add_bond(type=4,src=1,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(1,0,0));
-    add_bond(type=3,src=1,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,1,0));
-    add_bond(type=4,src=1,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(-1,1,0));
+    add_bond(type=3,ngb=2,src=0,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(1,0,0));
+    add_bond(type=4,ngb=2,src=0,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(0,1,0));
+    add_bond(type=3,ngb=2,src=0,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(-1,1,0));
+    add_bond(type=4,ngb=2,src=1,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(1,0,0));
+    add_bond(type=3,ngb=2,src=1,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,1,0));
+    add_bond(type=4,ngb=2,src=1,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(-1,1,0));
+  }
+
+  else if (lname=="HONEYCOMB3") {
+    lid = lattice_id::HONEYCOMB3;
+    extent[dim3] = Extent{1, boundary_type::open, boundary_type::open, 0.0};
+    ibrav = brav_id::HEXAGONAL;
+    if (spatial_dim==0) ibrav = brav_id::ZERO;
+    if (spatial_dim==1) ibrav = brav_id::CHAIN;
+
+    // basis vectors
+    double aa = 1.0; // A-B bond
+    double x = 0.5*std::sqrt(3.0)*aa; 
+    double y = 1.5*aa; 
+    set_basis_vectors(a1=vec(x,-y,0), a2=vec(x,y,0), a3=vec(0,0,0));
+
+    // add sites
+    //add_basis_site(type=0, orbitals=2, coord=vec(0,0,0));
+    //add_basis_site(type=1, orbitals=2, coord=vec(0,aa,0));
+    add_basis_site(type=0, orbitals=1, coord=vec(0,0,0));
+    add_basis_site(type=1, orbitals=1, coord=vec(0,aa,0));
+
+    // NN bonds
+    int ngb;
+    add_bond(type=0,ngb=1,src=0,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,0,0));
+    add_bond(type=1,ngb=1,src=0,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,-1,0));
+    add_bond(type=2,ngb=1,src=0,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(1,0,0));
+
+    // NNN bonds
+    add_bond(type=3,ngb=2,src=0,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(1,0,0));
+    add_bond(type=4,ngb=2,src=0,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(1,1,0));
+    add_bond(type=3,ngb=2,src=0,src_offset=pos(0,0,0),tgt=0,tgt_offset=pos(0,1,0));
+    add_bond(type=4,ngb=2,src=1,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(1,0,0));
+    add_bond(type=3,ngb=2,src=1,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(1,1,0));
+    add_bond(type=4,ngb=2,src=1,src_offset=pos(0,0,0),tgt=1,tgt_offset=pos(0,1,0));
   }
 
   /*------------- undefined lattice--------------*/
@@ -237,6 +273,8 @@ int Lattice::construct(const input::Parameters& parms)
   define_lattice();
   finalize_lattice();
   construct_graph();
+  // for check 
+  print_lattice();
 
   return 0;
 }
@@ -416,6 +454,7 @@ int Lattice::construct_graph(void)
   Vector3i bravindex(0,0,0);
   std::vector<Site> allsites;
   std::vector<Bond> allbonds;
+  // Full list sites and bonds
   for (int i=0; i<num_unitcells(); ++i) {
     translated_cell = get_translated_cell(bravindex);
     // collect the sites
@@ -443,7 +482,6 @@ int Lattice::construct_graph(void)
     //std::cout << "tp = " << s.type() << "\n\n";
     //getchar();
   }
-  //getchar();
 
   /*
   int i=0;
@@ -457,7 +495,6 @@ int Lattice::construct_graph(void)
     getchar();
   }
   */
-
 
   // Save the bonds.
   bonds_.clear();
@@ -495,11 +532,100 @@ int Lattice::construct_graph(void)
     // save the bond
     //bondtype_set_.insert(b.type());
     bonds_.push_back(b);
-
     //std::cout << "b.vector = " << b.vector().transpose() << "\n";
     //getchar();
   }
   num_bonds_ = bonds_.size();
+
+  // ---------------------------------------
+  // Special case of Honeycomb nanodisk
+  // ---------------------------------------
+  if (Lattice::id()==lattice_id::HONEYCOMB3) {
+  //if (true) {
+    allsites.clear();
+    allbonds.clear();
+    int L1 = copy_extent[0].size;
+    int L2 = copy_extent[1].size;
+    int delete_site1 = 2*(L1-1);
+    int delete_site2 = 2*(L1*L2-L1)+1;
+
+    int new_site_id = 0;
+    int new_bond_id = 0;
+    // delete corner sites
+    std::vector<int> new_id_list(sites_.size());
+    for (auto& s : sites_) {
+      if (s.id()==delete_site1 || s.id()==delete_site2) {
+        new_id_list[s.id()] = -1;
+        continue;
+      }
+      new_id_list[s.id()] = new_site_id;
+      s.reset_id(new_site_id);
+      s.reset_uid(new_site_id);
+      new_site_id++;
+      allsites.push_back(s);
+    }
+    // delete bonds connected to corner sites
+    for (auto& b : bonds_) {
+      auto src = b.src();
+      auto tgt = b.tgt();
+      if (src.id()==delete_site1 || src.id()==delete_site2) {
+        continue;
+      }
+      if (tgt.id()==delete_site1 || tgt.id()==delete_site2) {
+        continue;
+      }
+      // re-assign correct id & uid values of bond-src and tgt
+      new_site_id = new_id_list[src.id()];
+      src.reset_id(new_site_id);
+      src.reset_uid(new_site_id);
+      new_site_id = new_id_list[tgt.id()];
+      tgt.reset_id(new_site_id);
+      tgt.reset_uid(new_site_id);
+      b.connect(src, src.bravindex(), tgt, tgt.bravindex(), b.sign());
+      b.reset_id(new_bond_id++);
+      allbonds.push_back(b);
+    }
+
+    // reset the Lattice lists
+    sites_.clear();
+    bonds_.clear();
+    for (auto& s : allsites) {
+      s.clear_bonds(); // to be added later
+      sites_.push_back(s);
+    }
+    num_total_sites_ = sites_.size();
+    num_basis_sites_ = num_total_sites_;
+
+    for (const auto& b : allbonds) {
+      bonds_.push_back(b);
+      // site connections
+      sites_[b.src_id()].add_out_bond(b.id());
+      sites_[b.tgt_id()].add_in_bond(b.id());
+    }
+    num_bonds_ = bonds_.size();
+
+    // reset the unit cell
+    Unitcell::clear_sites();
+    Unitcell::clear_bonds();
+    for (const auto& s : sites_) {
+      Unitcell::add_site(s);
+      //std::cout << "uid = " << s.uid() << "\n";
+    }
+    for (const auto& b : bonds_) {
+      Unitcell::add_bond(b);
+    }
+    Unitcell::finalize();
+    Unitcell::update_num_orbitals();
+
+    //std::cout << num_basis_sites()  << "\n";
+    //std::cout << num_basis_orbitals()  << "\n";
+    //getchar();
+    // 2 corner sites got deleted
+    /*
+    num_basis_sites_ -= 2;
+    num_total_sites_ -= 2;
+    */
+  }
 
   // check consisency
   if (sites_.size() != num_total_sites_) {
@@ -551,6 +677,56 @@ int Lattice::reset_boundary_twist(const int& twist_id)
   return 0;
 }
 
+int Lattice::print_lattice(void) 
+{
+  std::ofstream fs;
+  fs.open("lattice_structure.txt");
+  fs << "#" << std::string(72, '-') << "\n";
+  fs << "# Lattice: " << name() << " (";
+  fs << "Size = "<<size1()<<"x"<<size2()<<"x"<<size3()<<", ";
+  fs << "Sites/unitcell = "<<num_basis_sites()<<", ";
+  fs << "Boundary = "<<static_cast<int>(bc1_periodicity()) << "-"; 
+  fs << static_cast<int>(bc2_periodicity()) << "-";
+  fs << static_cast<int>(bc3_periodicity()) << ")\n";
+  fs << "# No of sites = " << num_sites() << "\n";
+  fs << "#" << std::string(72, '-') << "\n";
+  fs << "# List of bonds and coordinates of connected sites\n"; 
+  fs << "#" << std::string(72, '-') << "\n";
+
+  fs << std::right;
+  fs << std::scientific << std::uppercase << std::setprecision(6);
+  // reset bond phase values
+  for (const Bond& b : bonds_) {
+    // skip bonds across boundaries
+    if (b.sign()<0) continue; 
+    // skip bonds other than NNs
+    //if (b.ngb()>1) continue; 
+
+    fs<<"# bond:"<<b.id()<<" (type="<<b.type()<<")"<<"\n";
+    Vector3d Ri = b.src().coord();
+    Vector3d Rj = b.tgt().coord();
+    fs<<std::setw(14)<<Ri(0)<<std::setw(14)<<Ri(1)<<std::setw(14)<<Ri(2)<<"\n";
+    fs<<std::setw(14)<<Rj(0)<<std::setw(14)<<Rj(1)<<std::setw(14)<<Rj(2)<<"\n";
+    fs<<std::endl;
+    //fs_ << std::scientific << std::uppercase << std::setprecision(6);
+  }
+
+  fs<<std::endl;
+  fs<<std::endl;
+  fs << "#" << std::string(72, '-') << "\n";
+  fs << "# Sites:" << "\n";
+  fs << "#" << std::string(72, '-') << "\n";
+  for (const Site& s : sites_) {
+    fs<<"# site:"<<s.id()<<": ";
+    Vector3d R = s.coord();
+    fs<<std::setw(14)<<R(0)<<std::setw(14)<<R(1)<<std::setw(14)<<R(2)<<"\n";
+  }
+  fs<<std::endl;
+
+  fs.close();
+
+  return 0;
+}
 
 
 

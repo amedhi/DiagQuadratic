@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-09 17:26:56
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-19 22:15:22
+* Last Modified time: 2026-03-23 22:00:14
 *----------------------------------------------------------------------------*/
 #include <boost/algorithm/string.hpp>
 #include "./bandstruct.h"
@@ -188,14 +188,25 @@ void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
       int kidx = 0;
       for (const auto& kvec : kspace.kmesh()) {
         ham.construct_upspin_block(kvec);
+        //std::cout << ham.upspin_block() << "\n"; getchar();
         es.compute(ham.upspin_block(), Eigen::EigenvaluesOnly);
         auto e_kn = es.eigenvalues().transpose();
-        fs_<<std::setw(6) << kidx++; 
-        fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
-        for (int n=0; n<num_bands; ++n) {
-          fs_<<std::setw(14)<<e_kn(n); 
+        if (kspace.kmesh().size()>1) {
+          fs_<<std::setw(6) << kidx++; 
+          fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
+          for (int n=0; n<num_bands; ++n) {
+            fs_<<std::setw(14)<<e_kn(n); 
+          }
+          fs_ << std::endl; 
         }
-        fs_ << std::endl; 
+        else {
+          for (int n=0; n<num_bands; ++n) {
+            fs_<<std::setw(6) << n; 
+            fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
+            fs_<<std::setw(14)<<e_kn(n); 
+            fs_ << std::endl; 
+          }
+        }
       }
     }
     // only DN-spin sector
@@ -205,12 +216,22 @@ void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
         ham.construct_dnspin_block(kvec);
         es.compute(ham.dnspin_block(), Eigen::EigenvaluesOnly);
         auto e_kn = es.eigenvalues().transpose();
-        fs_<<std::setw(6) << kidx++; 
-        fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
-        for (int n=0; n<num_bands; ++n) {
-          fs_<<std::setw(14)<<e_kn(n); 
+        if (kspace.kmesh().size()>1) {
+          fs_<<std::setw(6) << kidx++; 
+          fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
+          for (int n=0; n<num_bands; ++n) {
+            fs_<<std::setw(14)<<e_kn(n); 
+          }
+          fs_ << std::endl; 
         }
-        fs_ << std::endl; 
+        else {
+          for (int n=0; n<num_bands; ++n) {
+            fs_<<std::setw(6) << n; 
+            fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
+            fs_<<std::setw(14)<<e_kn(n); 
+            fs_ << std::endl; 
+          }
+        }
       }
     }
     // BOTH-spin sectors
@@ -220,17 +241,32 @@ void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
         fs_<<std::setw(6) << kidx++; 
         fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
         ham.construct_kblock(kvec);
-        es.compute(ham.upspin_block(), Eigen::EigenvaluesOnly);
-        RealVector e_kn = es.eigenvalues().transpose();
-        for (int n=0; n<num_bands; ++n) {
-          fs_<<std::setw(14)<<e_kn(n); 
+        if (kspace.kmesh().size()) {
+          es.compute(ham.upspin_block(), Eigen::EigenvaluesOnly);
+          RealVector e_kn = es.eigenvalues().transpose();
+          for (int n=0; n<num_bands; ++n) {
+            fs_<<std::setw(14)<<e_kn(n); 
+          }
+          es.compute(ham.dnspin_block(), Eigen::EigenvaluesOnly);
+          e_kn = es.eigenvalues().transpose();
+          for (int n=0; n<num_bands; ++n) {
+            fs_<<std::setw(14)<<e_kn(n); 
+          }
+          fs_ << std::endl; 
         }
-        es.compute(ham.dnspin_block(), Eigen::EigenvaluesOnly);
-        e_kn = es.eigenvalues().transpose();
-        for (int n=0; n<num_bands; ++n) {
-          fs_<<std::setw(14)<<e_kn(n); 
+        else {
+          es.compute(ham.upspin_block(), Eigen::EigenvaluesOnly);
+          RealVector e_kn_up = es.eigenvalues().transpose();
+          es.compute(ham.dnspin_block(), Eigen::EigenvaluesOnly);
+          RealVector e_kn_dn = es.eigenvalues().transpose();
+          for (int n=0; n<num_bands; ++n) {
+            fs_<<std::setw(6) << n; 
+            fs_<<std::setw(14)<<kvec(0)<<std::setw(14)<<kvec(1)<<std::setw(14)<<kvec(2); 
+            fs_<<std::setw(14)<<e_kn_up(n); 
+            fs_<<std::setw(14)<<e_kn_dn(n); 
+            fs_ << std::endl; 
+          }
         }
-        fs_ << std::endl; 
       }
     }
     fs_ << std::endl; 

@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-06 12:15:35
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-22 11:32:04
+* Last Modified time: 2026-03-23 16:46:17
 *----------------------------------------------------------------------------*/
 #include "./hamiltonian.h"
 #include <boost/algorithm/string.hpp>
@@ -330,6 +330,7 @@ void UnitcellTerm::build_bondterm(const model::ModelTerm& bterm,
     for (const auto& id : out_bond_ids) {
       int btype = lattice.bond(id).type();
       int j = lattice.bond(id).tgt().uid();
+      //std::cout << "j = " << j << "\n";
       strMatrix expr_mat = bterm.coupling_expr(btype);
       ComplexMatrix coeff_mat = bterm.coupling(btype);
       int rows = lattice.site(i).num_orbitals(); 
