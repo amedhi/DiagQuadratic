@@ -1,0 +1,29 @@
+/Users/amedhi/Projects/Codes/DiagQuadratic/build/src/expression/muparserx/parser/mpTokenReader.o: \
+  src/expression/muparserx/parser/mpTokenReader.cpp \
+  src/expression/muparserx/parser/mpTokenReader.h \
+  src/expression/muparserx/parser/mpIToken.h \
+  src/expression/muparserx/parser/mpTypes.h \
+  src/expression/muparserx/parser/suSortPred.h \
+  src/expression/muparserx/parser/mpDefines.h \
+  src/expression/muparserx/parser/mpMatrix.h \
+  src/expression/muparserx/parser/mpMatrixError.h \
+  src/expression/muparserx/parser/mpFwdDecl.h \
+  src/expression/muparserx/parser/mpError.h \
+  src/expression/muparserx/parser/mpParserMessageProvider.h \
+  src/expression/muparserx/parser/mpStack.h \
+  src/expression/muparserx/parser/mpParserBase.h \
+  src/expression/muparserx/parser/mpIOprt.h \
+  src/expression/muparserx/parser/mpICallback.h \
+  src/expression/muparserx/parser/mpIPackage.h \
+  src/expression/muparserx/parser/mpIPrecedence.h \
+  src/expression/muparserx/parser/mpIOprtBinShortcut.h \
+  src/expression/muparserx/parser/mpIValReader.h \
+  src/expression/muparserx/parser/mpValue.h \
+  src/expression/muparserx/parser/mpIValue.h \
+  src/expression/muparserx/parser/mpVariable.h \
+  src/expression/muparserx/parser/mpRPN.h \
+  src/expression/muparserx/parser/mpValueCache.h \
+  src/expression/muparserx/parser/mpIfThenElse.h \
+  src/expression/muparserx/parser/mpScriptTokens.h \
+  src/expression/muparserx/parser/mpOprtIndex.h \
+  src/expression/muparserx/parser/mpOprtMatrix.h
