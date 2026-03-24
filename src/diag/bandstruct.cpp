@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-09 17:26:56
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-03-23 22:00:14
+* Last Modified time: 2026-03-24 11:28:46
 *----------------------------------------------------------------------------*/
 #include <boost/algorithm/string.hpp>
 #include "./bandstruct.h"
@@ -95,26 +95,40 @@ void BandStruct::compute(const kSpace& kspace, const Hamiltonian& ham)
   fs_ << "#" << std::string(72, '-') << "\n";
   fs_ << "# ";
   fs_ << std::left;
-  fs_ << std::setw(6)<<"k"<<std::setw(14)<<"kx"<<std::setw(14)<<"ky"<<std::setw(14)<<"kz";
-  if (spin_sector_==spin::UP) {
-    for (int n=0; n<num_bands; ++n) {
-      fs_<<std::setw(14)<<"ek_"+std::to_string(n)+"_0"; 
+  if (kspace.kmesh().size()>1) {
+    fs_ << std::setw(6)<<"k"<<std::setw(14)<<"kx"<<std::setw(14)<<"ky"<<std::setw(14)<<"kz";
+    if (spin_sector_==spin::UP) {
+      for (int n=0; n<num_bands; ++n) {
+        fs_<<std::setw(14)<<"ek_"+std::to_string(n)+"_0"; 
+      }
+    }
+    if (spin_sector_==spin::DN) {
+      for (int n=0; n<num_bands; ++n) {
+        fs_<<std::setw(14)<<"ek_"+std::to_string(n)+"_1"; 
+      }
+    }
+    if (spin_sector_==spin::BOTH) {
+      for (int n=0; n<num_bands; ++n) {
+        fs_<<std::setw(14)<<"ek_"+std::to_string(n)+"_0"; 
+      }
+      for (int n=0; n<num_bands; ++n) {
+        fs_<<std::setw(14)<<"ek_"+std::to_string(n)+"_1"; 
+      }
+    }
+    fs_ << std::endl;
+  }
+  else {
+    fs_ << std::setw(6)<<"n"<<std::setw(14)<<"kx"<<std::setw(14)<<"ky"<<std::setw(14)<<"kz";
+    if (spin_sector_==spin::UP) {
+      fs_<<std::setw(14)<<"ek_n_0"<<"\n"; 
+    }
+    if (spin_sector_==spin::DN) {
+      fs_<<std::setw(14)<<"ek_n_1"<<"\n"; 
+    }
+    if (spin_sector_==spin::BOTH) {
+      fs_<<std::setw(14)<<"ek_n_0"<<std::setw(14)<<"ek_n_1"<<"\n"; 
     }
   }
-  if (spin_sector_==spin::DN) {
-    for (int n=0; n<num_bands; ++n) {
-      fs_<<std::setw(14)<<"ek_"+std::to_string(n)+"_1"; 
-    }
-  }
-  if (spin_sector_==spin::BOTH) {
-    for (int n=0; n<num_bands; ++n) {
-      fs_<<std::setw(14)<<"ek_"+std::to_string(n)+"_0"; 
-    }
-    for (int n=0; n<num_bands; ++n) {
-      fs_<<std::setw(14)<<"ek_"+std::to_string(n)+"_1"; 
-    }
-  }
-  fs_ << std::endl;
   fs_ << "#" << std::string(72, '-') << "\n";
   //---------------------------------------------------------------------
 

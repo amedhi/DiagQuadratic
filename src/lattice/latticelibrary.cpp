@@ -700,7 +700,7 @@ int Lattice::print_lattice(void)
     // skip bonds across boundaries
     if (b.sign()<0) continue; 
     // skip bonds other than NNs
-    //if (b.ngb()>1) continue; 
+    if (b.ngb()>1) continue; 
 
     fs<<"# bond:"<<b.id()<<" (type="<<b.type()<<")"<<"\n";
     Vector3d Ri = b.src().coord();
