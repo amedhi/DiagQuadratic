@@ -1115,4 +1115,4 @@
   src/diag/././../mcdata/../mcdata/mcdata.h \
   src/diag/././../mcdata/../mcdata/../scheduler/mpi_comm.h \
   src/diag/./././hamiltonian.h src/diag/./././kspace.h \
-  src/diag/././wavefunction.h
+  src/diag/././wavefunction.h src/diag/././entanglement.h

@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-09 17:07:45
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-01-20 10:26:43
+* Last Modified time: 2026-04-06 11:03:38
 *----------------------------------------------------------------------------*/
 #ifndef MC_OBSERVABLES_H
 #define MC_OBSERVABLES_H
@@ -16,6 +16,7 @@
 #include "../model/model.h"
 #include "./bandstruct.h"
 #include "./wavefunction.h"
+#include "./entanglement.h"
 
 namespace diag {
 
@@ -58,6 +59,7 @@ private:
   int num_xvars_{0};
   BandStruct band_struct_; 
   WaveFunction wave_function_; 
+  EntanglementEntropy entang_entropy_; 
 };
 
 

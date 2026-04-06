@@ -1055,7 +1055,7 @@
   src/diag/././hamiltonian.h src/diag/././../scheduler/task.h \
   src/diag/././../lattice/lattice.h src/diag/././../model/model.h \
   src/diag/./././matrix.h src/diag/././kspace.h \
-  src/diag/./wavefunction.h \
+  src/diag/./wavefunction.h src/diag/./entanglement.h \
   /usr/local/include/boost/algorithm/string.hpp \
   /usr/local/include/boost/algorithm/string/std_containers_traits.hpp \
   /usr/local/include/boost/algorithm/string/std/string_traits.hpp \

@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2025-12-06 11:29:29
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-03-22 12:54:36
+* Last Modified time: 2026-04-06 12:11:18
 *----------------------------------------------------------------------------*/
 #ifndef LATTICE_H
 #define LATTICE_H
@@ -288,6 +288,9 @@ public:
   int size1(void) const { return static_cast<int>(extent[dim1].size); }
   int size2(void) const { return static_cast<int>(extent[dim2].size); }
   int size3(void) const { return static_cast<int>(extent[dim3].size); }
+  int input_size1(void) const { return static_cast<int>(copy_extent[dim1].size); }
+  int input_size2(void) const { return static_cast<int>(copy_extent[dim2].size); }
+  int input_size3(void) const { return static_cast<int>(copy_extent[dim3].size); }
   const int& num_boundary_twists(void) const { return num_total_twists_; }
   const double& bc1_twist(void) const { return extent[dim1].bc_twist; }
   const double& bc2_twist(void) const { return extent[dim2].bc_twist; }

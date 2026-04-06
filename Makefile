@@ -29,6 +29,7 @@ SRCS+= diag/kspace.cpp
 SRCS+= diag/kspace_kpath.cpp
 SRCS+= diag/bandstruct.cpp
 SRCS+= diag/wavefunction.cpp
+SRCS+= diag/entanglement.cpp
 SRCS+= diag/observables.cpp
 SRCS+= diag/diag.cpp
 SRCS+= main.cpp
@@ -55,6 +56,7 @@ HDRS=    scheduler/mpi_comm.h \
 	 diag/hamiltonian.h \
 	 diag/bandstruct.h \
 	 diag/wavefunction.h \
+	 diag/entanglement.h \
 	 diag/observables.h \
 	 diag/diag.h \
 	 vmc/bandstruct.h \
