@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2026-04-06 10:53:30
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-04-07 13:05:00
+* Last Modified time: 2026-04-07 13:10:26
 *----------------------------------------------------------------------------*/
 #include <boost/algorithm/string.hpp>
 #include "./entanglement.h"
@@ -89,7 +89,6 @@ void EntanglementEntropy::compute(const kSpace& kspace, const Hamiltonian& ham)
   ComplexVector V(N-1);
   ComplexVector U_degen(2);
   ComplexVector V_degen(2);
-    std::cout << U_degen.size() << "\n"; getchar();
 
   // Correlation Matrix A
   ComplexMatrix CorrMatrix_A(size_A_,size_A_);
