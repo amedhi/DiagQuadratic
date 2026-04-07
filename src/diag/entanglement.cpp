@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2026-04-06 10:53:30
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-04-07 10:46:30
+* Last Modified time: 2026-04-07 13:05:00
 *----------------------------------------------------------------------------*/
 #include <boost/algorithm/string.hpp>
 #include "./entanglement.h"
@@ -85,18 +85,27 @@ void EntanglementEntropy::compute(const kSpace& kspace, const Hamiltonian& ham)
   es.compute(ham.upspin_block());
 
   int N = ham.dimension()/2;
-  ComplexVector U(N);
-  ComplexVector V(N);
+  ComplexVector U(N-1);
+  ComplexVector V(N-1);
+  ComplexVector U_degen(2);
+  ComplexVector V_degen(2);
+    std::cout << U_degen.size() << "\n"; getchar();
 
   // Correlation Matrix A
   ComplexMatrix CorrMatrix_A(size_A_,size_A_);
   for (int i=0; i<size_A_; ++i) {
   	int r_alpha = subsys_A_[i];
-  	U = es.eigenvectors().row(r_alpha)(Eigen::seqN(0,N));
+  	U = es.eigenvectors().row(r_alpha)(Eigen::seqN(0,N-1));
+    U_degen = es.eigenvectors().row(r_alpha)(Eigen::seq(N-1,N));
+
+    //std::cout << i << "\n"; 
+    //std::cout << U_degen.size() << "\n"; getchar();
+
   	for (int j=0; j<size_A_; ++j) {
   		int rprime_beta = subsys_A_[j];
-  		V = es.eigenvectors().row(rprime_beta)(Eigen::seqN(0,N));
-  		CorrMatrix_A(i,j) = U.dot(V);
+  		V = es.eigenvectors().row(rprime_beta)(Eigen::seqN(0,N-1));
+      V_degen = es.eigenvectors().row(rprime_beta)(Eigen::seq(N-1,N));
+  		CorrMatrix_A(i,j) = U.dot(V) + 0.5*U_degen.dot(V_degen);
   	}
   }
 
@@ -104,11 +113,13 @@ void EntanglementEntropy::compute(const kSpace& kspace, const Hamiltonian& ham)
   ComplexMatrix CorrMatrix_B(size_A_,size_A_);
   for (int i=0; i<size_A_; ++i) {
   	int r_alpha = subsys_B_[i];
-  	U = es.eigenvectors().row(r_alpha)(Eigen::seqN(0,N));
+  	U = es.eigenvectors().row(r_alpha)(Eigen::seqN(0,N-1));
+    U_degen = es.eigenvectors().row(r_alpha)(Eigen::seq(N-1,N));
   	for (int j=0; j<size_A_; ++j) {
   		int rprime_beta = subsys_B_[j];
-  		V = es.eigenvectors().row(rprime_beta)(Eigen::seqN(0,N));
-  		CorrMatrix_B(i,j) = U.dot(V);
+  		V = es.eigenvectors().row(rprime_beta)(Eigen::seqN(0,N-1));
+      V_degen = es.eigenvectors().row(rprime_beta)(Eigen::seq(N-1,N));
+  		CorrMatrix_B(i,j) = U.dot(V) + 0.5*U_degen.dot(V_degen);
   	}
   }
 
@@ -116,11 +127,13 @@ void EntanglementEntropy::compute(const kSpace& kspace, const Hamiltonian& ham)
   ComplexMatrix CorrMatrix_cAB(size_cAB_,size_cAB_);
   for (int i=0; i<size_cAB_; ++i) {
   	int r_alpha = subsys_cAB_[i];
-  	U = es.eigenvectors().row(r_alpha)(Eigen::seqN(0,N));
+  	U = es.eigenvectors().row(r_alpha)(Eigen::seqN(0,N-1));
+    U_degen = es.eigenvectors().row(r_alpha)(Eigen::seq(N-1,N));
   	for (int j=0; j<size_cAB_; ++j) {
   		int rprime_beta = subsys_cAB_[j];
-  		V = es.eigenvectors().row(rprime_beta)(Eigen::seqN(0,N));
-  		CorrMatrix_cAB(i,j) = U.dot(V);
+  		V = es.eigenvectors().row(rprime_beta)(Eigen::seqN(0,N-1));
+      V_degen = es.eigenvectors().row(rprime_beta)(Eigen::seq(N-1,N));
+  		CorrMatrix_cAB(i,j) = U.dot(V) + 0.5*U_degen.dot(V_degen);
   	}
   }
 
