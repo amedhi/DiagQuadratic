@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2026-04-06 10:45:18
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-04-06 13:01:57
+* Last Modified time: 2026-04-06 15:16:42
 *----------------------------------------------------------------------------*/
 #ifndef ENTANGLEMENT_H
 #define ENTANGLEMENT_H
@@ -35,8 +35,10 @@ private:
   std::vector<int> subsys_A_;
   std::vector<int> subsys_B_;
   std::vector<int> subsys_cAB_;
+  double entropy_A_{0.0};
+  double entropy_B_{0.0};
+  double entropy_cAB_{0.0};
   std::vector<std::string> xvars_;
-  ComplexMatrix CorrMatrix_;
 };
 
 

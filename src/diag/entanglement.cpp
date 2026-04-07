@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2026-04-06 10:53:30
 * Last Modified by:   Amal Medhi
-* Last Modified time: 2026-04-06 13:13:30
+* Last Modified time: 2026-04-07 10:46:30
 *----------------------------------------------------------------------------*/
 #include <boost/algorithm/string.hpp>
 #include "./entanglement.h"
@@ -88,40 +88,101 @@ void EntanglementEntropy::compute(const kSpace& kspace, const Hamiltonian& ham)
   ComplexVector U(N);
   ComplexVector V(N);
 
-  // --------------S_A-------------------
   // Correlation Matrix A
-  CorrMatrix_.resize(size_A_,size_A_);
+  ComplexMatrix CorrMatrix_A(size_A_,size_A_);
   for (int i=0; i<size_A_; ++i) {
   	int r_alpha = subsys_A_[i];
   	U = es.eigenvectors().row(r_alpha)(Eigen::seqN(0,N));
   	for (int j=0; j<size_A_; ++j) {
   		int rprime_beta = subsys_A_[j];
   		V = es.eigenvectors().row(rprime_beta)(Eigen::seqN(0,N));
-  		CorrMatrix_(i,j) = U.dot(V);
+  		CorrMatrix_A(i,j) = U.dot(V);
   	}
   }
-  // Eigenvalues of CorrMatrix_A
-  es.compute(CorrMatrix_, Eigen::EigenvaluesOnly);
-  for (int i=0; i<N; ++i) {
-  	std::cout << es.eigenvalues()(i) << "\n"; 
-  }
-  std::cout << "\n"; 
 
-
-  // --------------S_B-------------------
   // Correlation Matrix B
+  ComplexMatrix CorrMatrix_B(size_A_,size_A_);
   for (int i=0; i<size_A_; ++i) {
   	int r_alpha = subsys_B_[i];
   	U = es.eigenvectors().row(r_alpha)(Eigen::seqN(0,N));
   	for (int j=0; j<size_A_; ++j) {
   		int rprime_beta = subsys_B_[j];
   		V = es.eigenvectors().row(rprime_beta)(Eigen::seqN(0,N));
-  		CorrMatrix_(i,j) = U.dot(V);
+  		CorrMatrix_B(i,j) = U.dot(V);
   	}
   }
 
-  // --------------S_cAB-------------------
+  // Correlation Matrix cAB
+  ComplexMatrix CorrMatrix_cAB(size_cAB_,size_cAB_);
+  for (int i=0; i<size_cAB_; ++i) {
+  	int r_alpha = subsys_cAB_[i];
+  	U = es.eigenvectors().row(r_alpha)(Eigen::seqN(0,N));
+  	for (int j=0; j<size_cAB_; ++j) {
+  		int rprime_beta = subsys_cAB_[j];
+  		V = es.eigenvectors().row(rprime_beta)(Eigen::seqN(0,N));
+  		CorrMatrix_cAB(i,j) = U.dot(V);
+  	}
+  }
 
+  // Entropy of subsystem-A
+  es.compute(CorrMatrix_A, Eigen::EigenvaluesOnly);
+  entropy_A_ = 0.0;
+  for (int i=0; i<size_A_; ++i) {
+  	double lambda = es.eigenvalues()(i);
+  	//if (std::abs(lambda)<1.0E-15) lambda=0.0;
+  	double lambda1 = 1.0-lambda;
+    if (std::abs(lambda)<1.0E-12) {
+      entropy_A_ += -lambda1*std::log(lambda1);
+    }
+    else if (std::abs(lambda1)<1.0E-12) {
+      entropy_A_ += -lambda*std::log(lambda);
+    }
+    else {
+      entropy_A_ += -lambda*std::log(lambda)-lambda1*std::log(lambda1);
+    }
+  }
+  std::cout<<"S_A = "<<entropy_A_<<"\n"; 
+
+  // Entropy of subsystem-A
+  es.compute(CorrMatrix_B, Eigen::EigenvaluesOnly);
+  entropy_B_ = 0.0;
+  for (int i=0; i<size_A_; ++i) {
+  	double lambda = es.eigenvalues()(i);
+  	double lambda1 = 1.0-lambda;
+    if (std::abs(lambda)<1.0E-12) {
+      entropy_B_ += -lambda1*std::log(lambda1);
+    }
+    else if (std::abs(lambda1)<1.0E-12) {
+      entropy_B_ += -lambda*std::log(lambda);
+    }
+    else {
+      entropy_B_ += -lambda*std::log(lambda)-lambda1*std::log(lambda1);
+    }
+  }
+  std::cout<<"S_B = "<<entropy_B_<<"\n"; 
+
+  // Entropy of subsystem-cAB
+  es.compute(CorrMatrix_cAB, Eigen::EigenvaluesOnly);
+  entropy_cAB_ = 0.0;
+  for (int i=0; i<size_cAB_; ++i) {
+  	double lambda = es.eigenvalues()(i);
+  	double lambda1 = 1.0-lambda;
+  	if (std::abs(lambda)<1.0E-12) {
+  		entropy_cAB_ += -lambda1*std::log(lambda1);
+  	}
+  	else if (std::abs(lambda1)<1.0E-12) {
+  		entropy_cAB_ += -lambda*std::log(lambda);
+  	}
+    else {
+      entropy_cAB_ += -lambda*std::log(lambda)-lambda1*std::log(lambda1);
+      //std::cout << lambda << " " << lambda1 << "\n";
+      //std::cout << -lambda*std::log(lambda) << "\n";
+      //std::cout << -lambda1*std::log(lambda1) << "\n";
+      //getchar();
+    }
+  }
+  std::cout<<"S_AB = "<<entropy_cAB_<<"\n"; 
+  std::cout<<"Invariant = "<<entropy_A_+entropy_B_-entropy_cAB_<<"\n"; 
 }
 
 void EntanglementEntropy::print_heading(const std::string& header,
